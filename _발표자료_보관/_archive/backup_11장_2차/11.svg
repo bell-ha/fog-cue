@@ -1,0 +1,18 @@
+<!-- 11 결론 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+
+  <rect x="0" y="0" width="1600" height="900" fill="#FFFFFF"/>
+
+  <text x="110" y="104" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="22" font-weight="700" fill="#00A651">결론</text>
+  <text x="110" y="168" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="54" font-weight="700" fill="#111111">걷다 멈춘 순간에만 울리는 박자</text>
+  <line x1="110" y1="196" x2="196" y2="196" stroke="#00A651" stroke-width="5"/>
+
+  <text x="110" y="400" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="44" fill="#111111">걷다가 발이 굳는 순간에만<tspan x="110" dy="62">박자를 들려주는 벨트입니다</tspan></text>
+  <text x="110" y="508" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="19" fill="#666666">IMU 기반 보행 동결 검출 및 케이던스 적응형 청각 자극 시스템</text>
+
+  <text x="110" y="618" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="24" font-weight="700" fill="#00A651">리듬 자극은 이미 임상에서 쓰인다. 이 프로젝트가 더하는 것은, 그 자극을 언제 켤지 기기가 스스로 정하게 하는 일이다.</text>
+  <text x="110" y="656" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="21" fill="#444444">동결이 짧아지면 그만큼 넘어질 위험도 줄어든다. 이 프로젝트가 겨냥하는 결과다.</text>
+
+  <text x="1490" y="838" text-anchor="end" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="18" fill="#BBBBBB">11 / 11</text>
+
+</svg>

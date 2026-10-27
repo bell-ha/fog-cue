@@ -1,0 +1,44 @@
+<!-- 10 한계와 대응 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <rect x="0" y="0" width="1600" height="900" fill="#F4F2ED"/>
+  <text x="110" y="104" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="20" fill="#8A9098">10</text>
+
+  <text x="110" y="232" font-family="Hahmlet,'Nanum Myeongjo','Apple SD Gothic Neo',serif" font-weight="600" font-size="54" fill="#14181C">알고 있는 한계</text>
+  <line x1="110" y1="272" x2="1490" y2="272" stroke="#DCD8D0" stroke-width="1"/>
+  <text x="110" y="318" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="24" fill="#5A636B">한계를 숨긴 설계와, 한계를 알고 대책을 세운 설계는 다르다.</text>
+
+  <!-- 카드 1 -->
+  <line x1="110" y1="368" x2="110" y2="556" stroke="#14181C" stroke-width="3"/>
+  <text x="140" y="400" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="16" letter-spacing="0.08em" fill="#8A9098">01</text>
+  <text x="140" y="440" font-family="Hahmlet,'Nanum Myeongjo','Apple SD Gothic Neo',serif" font-weight="600" font-size="27" fill="#14181C">갑자기 울리면 놀라서 넘어지지 않나</text>
+  <text x="140" y="482" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="21" fill="#5A636B">파킨슨 환자는 자세 불안정이 있어 예상치 못한 소리에<tspan x="140" dy="32">놀람 반응이 나올 수 있다. 진동을 0.5초 선행시킨 뒤</tspan><tspan x="140" dy="32">소리가 들어가고, 첫 박은 페이드인으로 시작한다.</tspan></text>
+
+  <!-- 카드 2 -->
+  <line x1="820" y1="368" x2="820" y2="556" stroke="#14181C" stroke-width="3"/>
+  <text x="850" y="400" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="16" letter-spacing="0.08em" fill="#8A9098">02</text>
+  <text x="850" y="440" font-family="Hahmlet,'Nanum Myeongjo','Apple SD Gothic Neo',serif" font-weight="600" font-size="27" fill="#14181C">간헐적이면 습관화가 안 된다는 근거는</text>
+  <text x="850" y="482" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="21" fill="#5A636B">이 제안의 중심 가설이다. 선행연구를 근거로 삼되,<tspan x="850" dy="32">직접 검증할 방법도 준비한다 &#8212; 같은 사람에게</tspan><tspan x="850" dy="32">상시 큐와 개입형 큐를 교차 적용해 비교한다.</tspan></text>
+
+  <!-- 카드 3 -->
+  <line x1="110" y1="596" x2="110" y2="784" stroke="#14181C" stroke-width="3"/>
+  <text x="140" y="628" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="16" letter-spacing="0.08em" fill="#8A9098">03</text>
+  <text x="140" y="668" font-family="Hahmlet,'Nanum Myeongjo','Apple SD Gothic Neo',serif" font-weight="600" font-size="27" fill="#14181C">파킨슨 환자 데이터를 구할 수 없다</text>
+  <text x="140" y="710" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="21" fill="#5A636B">동결 구간이 라벨링된 공개 연구 데이터셋으로 검증한다.<tspan x="140" dy="32">허리 채널만 추출해 쓴다. 직접 착용한 시연 데이터는</tspan><tspan x="140" dy="32">검증이 아니라 기기 동작 확인용으로 용도를 분리한다.</tspan></text>
+
+  <!-- 카드 4 -->
+  <line x1="820" y1="596" x2="820" y2="784" stroke="#14181C" stroke-width="3"/>
+  <text x="850" y="628" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="16" letter-spacing="0.08em" fill="#8A9098">04</text>
+  <text x="850" y="668" font-family="Hahmlet,'Nanum Myeongjo','Apple SD Gothic Neo',serif" font-weight="600" font-size="27" fill="#14181C">동결이 아닌데 울린다</text>
+  <text x="850" y="710" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="21" fill="#5A636B">계단, 방향 전환, 물건을 집으려 멈추는 동작이 오탐이 된다.<tspan x="850" dy="32">필요 없을 때 울리는 기기는 아예 안 쓰게 된다. 임계값</tspan><tspan x="850" dy="32">하나로 확정하지 않고 일정 시간 유지 조건을 함께 건다.</tspan></text>
+
+  <g stroke="#DCD8D0" stroke-width="2">
+    <line x1="110" y1="828" x2="110" y2="838"/><line x1="128" y1="828" x2="128" y2="838"/>
+    <line x1="146" y1="828" x2="146" y2="838"/><line x1="164" y1="828" x2="164" y2="838"/>
+    <line x1="182" y1="828" x2="182" y2="838"/><line x1="200" y1="828" x2="200" y2="838"/>
+    <line x1="218" y1="828" x2="218" y2="838"/><line x1="236" y1="828" x2="236" y2="838"/>
+    <line x1="254" y1="828" x2="254" y2="838"/>
+    <line x1="290" y1="828" x2="290" y2="838"/><line x1="308" y1="828" x2="308" y2="838"/>
+  </g>
+  <line x1="272" y1="812" x2="272" y2="838" stroke="#A87218" stroke-width="3"/>
+  <text x="1490" y="838" text-anchor="end" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="16" letter-spacing="0.08em" fill="#8A9098">아타카 ATTACCA</text>
+</svg>

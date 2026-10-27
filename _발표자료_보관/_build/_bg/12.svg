@@ -1,0 +1,41 @@
+<!-- 12 한계와 대응 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+<rect x="0" y="0" width="1600" height="900" fill="#FFFFFF"/>
+<g font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif">
+  
+  
+  <line x1="110" y1="196" x2="196" y2="196" stroke="#00A651" stroke-width="5"/>
+  
+
+  <!-- 01 -->
+  <rect x="110" y="300" width="666" height="170" rx="8" fill="#F5F5F5"/>
+  
+  <line x1="142" y1="378" x2="142" y2="440" stroke="#00A651" stroke-width="4"/>
+  
+
+  <!-- 02 -->
+  <rect x="824" y="300" width="666" height="170" rx="8" fill="#F5F5F5"/>
+  
+  <line x1="856" y1="378" x2="856" y2="440" stroke="#00A651" stroke-width="4"/>
+  
+
+  <!-- 03 -->
+  <rect x="110" y="500" width="666" height="170" rx="8" fill="#F5F5F5"/>
+  
+  <line x1="142" y1="578" x2="142" y2="640" stroke="#00A651" stroke-width="4"/>
+  
+
+  <!-- 04 -->
+  <rect x="824" y="500" width="666" height="170" rx="8" fill="#F5F5F5"/>
+  
+  <line x1="856" y1="578" x2="856" y2="640" stroke="#00A651" stroke-width="4"/>
+  
+
+  <line x1="110" y1="698" x2="110" y2="742" stroke="#00A651" stroke-width="4"/>
+  
+
+  <line x1="110" y1="772" x2="1490" y2="772" stroke="#E0E0E0" stroke-width="1"/>
+  
+  
+</g>
+</svg>

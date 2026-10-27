@@ -1,0 +1,98 @@
+<!-- 06 발이 안 떨어질 때만 울린다 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+
+  <rect x="0" y="0" width="1600" height="900" fill="#FFFFFF"/>
+  
+  
+  <line x1="110" y1="196" x2="196" y2="196" stroke="#00A651" stroke-width="5"/>
+  
+
+  <circle cx="116" cy="260" r="4.5" fill="#00A651"/>
+  
+  
+  <circle cx="116" cy="338" r="4.5" fill="#00A651"/>
+  
+  
+  <circle cx="116" cy="416" r="4.5" fill="#00A651"/>
+  
+  
+  <circle cx="116" cy="494" r="4.5" fill="#00A651"/>
+  
+  
+
+  <rect x="110" y="578" width="4" height="140" fill="#00A651"/>
+  
+  
+  
+  
+  
+
+  
+  
+  
+  
+  
+  <rect x="850" y="308" width="620" height="44" fill="#F5F5F5"/>
+  
+  
+  
+  <line x1="850" y1="454" x2="1470" y2="454" stroke="#E0E0E0" stroke-width="1" stroke-dasharray="3 5"/>
+  <rect x="906.5" y="308" width="59" height="44" fill="#D6F0E0"/>
+  <rect x="1067.5" y="308" width="99" height="44" fill="#D6F0E0"/>
+  <rect x="1318.5" y="308" width="47" height="44" fill="#D6F0E0"/>
+  <g stroke="#00A651" stroke-width="5">
+    <line x1="913.5" y1="312" x2="913.5" y2="352"/>
+    <line x1="928.5" y1="312" x2="928.5" y2="352"/>
+    <line x1="943.5" y1="312" x2="943.5" y2="352"/>
+    <line x1="958.5" y1="312" x2="958.5" y2="352"/>
+    <line x1="1074.5" y1="312" x2="1074.5" y2="352"/>
+    <line x1="1091.5" y1="312" x2="1091.5" y2="352"/>
+    <line x1="1108.5" y1="312" x2="1108.5" y2="352"/>
+    <line x1="1125.5" y1="312" x2="1125.5" y2="352"/>
+    <line x1="1142.5" y1="312" x2="1142.5" y2="352"/>
+    <line x1="1159.5" y1="312" x2="1159.5" y2="352"/>
+    <line x1="1325.5" y1="312" x2="1325.5" y2="352"/>
+    <line x1="1336.5" y1="312" x2="1336.5" y2="352"/>
+    <line x1="1347.5" y1="312" x2="1347.5" y2="352"/>
+    <line x1="1358.5" y1="312" x2="1358.5" y2="352"/>
+  </g>
+  
+  
+  
+
+  <path d="M850,414L910,414 Q936,405 962,414L1091,414 Q1117,405 1143,414L1316,414 Q1342,405 1368,414L1470,414 L1470,504 L850,504 Z" fill="#D8EFE2"/>
+  <path d="M850,414L910,414 Q936,405 962,414L1091,414 Q1117,405 1143,414L1316,414 Q1342,405 1368,414L1470,414" fill="none" stroke="#0B7A3D" stroke-width="2.5" stroke-linejoin="round"/>
+  
+  <line x1="936" y1="352" x2="936" y2="572" stroke="#DDDDDD" stroke-width="1" stroke-dasharray="2 5"/>
+  <line x1="1117" y1="352" x2="1117" y2="572" stroke="#DDDDDD" stroke-width="1" stroke-dasharray="2 5"/>
+  <line x1="1342" y1="352" x2="1342" y2="572" stroke="#DDDDDD" stroke-width="1" stroke-dasharray="2 5"/>
+
+  <!-- ══ 04·05 공유 플롯 좌표 — 두 장 완전 동일 ══ -->
+  <line x1="850" y1="352" x2="1470" y2="352" stroke="#CCCCCC" stroke-width="1"/>
+  <line x1="850" y1="504" x2="1470" y2="504" stroke="#666666" stroke-width="1.5"/>
+  <g stroke="#999999" stroke-width="1">
+    <line x1="850" y1="504" x2="850" y2="511"/>
+    <line x1="1005" y1="504" x2="1005" y2="511"/>
+    <line x1="1160" y1="504" x2="1160" y2="511"/>
+    <line x1="1315" y1="504" x2="1315" y2="511"/>
+    <line x1="1470" y1="504" x2="1470" y2="511"/>
+  </g>
+  
+  
+  
+  
+  
+  
+  <circle cx="936" cy="584" r="10" fill="none" stroke="#777777" stroke-width="1.5"/>
+  <circle cx="1117" cy="584" r="10" fill="none" stroke="#777777" stroke-width="1.5"/>
+  <circle cx="1342" cy="584" r="10" fill="none" stroke="#777777" stroke-width="1.5"/>
+  
+  
+  
+
+  <line x1="110" y1="772" x2="1490" y2="772" stroke="#E0E0E0" stroke-width="1"/>
+  
+  
+  
+
+</svg>

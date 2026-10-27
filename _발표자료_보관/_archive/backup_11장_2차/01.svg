@@ -1,0 +1,22 @@
+<!-- 01 표지 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+
+  <rect x="0" y="0" width="1600" height="900" fill="#FFFFFF"/>
+
+  <!-- 이름이 한글 9자가 되면서 CAST식 좌우 배치(워드마크 | 우측 텍스트)가 폭에서 깨진다.
+       세로 스택으로 전환. 순서는 이름 → 쉬운 한 줄 → 정식 명칭.
+       ※ 기술 상세(Freeze Index 등)는 표지에서 뺀다. 배경 없는 청중에게 읽히지 않고
+          쉬운 문장을 묻는다. 07번 블록도와 함께 나와야 이해된다 -->
+  <text x="110" y="400" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-weight="700" font-size="88" fill="#111111">동결 감지 자극 시스템</text>
+
+  <!-- 주인공 줄 : 전문어를 한 글자도 쓰지 않는다 -->
+  <text x="110" y="492" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="32" fill="#444444">파킨슨 환자는 걷다가 갑자기 발이 바닥에 붙습니다.<tspan x="110" dy="42">그 순간을 감지해 박자를 들려주는 허리 벨트입니다.</tspan></text>
+
+  <text x="110" y="598" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-weight="700" font-size="22" fill="#00A651">IMU 기반 보행 동결 검출 및 케이던스 적응형 청각 자극 시스템</text>
+
+  <text x="110" y="658" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="22" fill="#888888">이종하 · 2026.09.27</text>
+
+  <text x="110" y="838" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-weight="700" font-size="20" fill="#00A651">단국대학교 뉴뮤직과 · 컴퓨터공학</text>
+  <text x="1490" y="838" text-anchor="end" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="18" fill="#BBBBBB">1 / 11</text>
+
+</svg>

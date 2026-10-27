@@ -1,0 +1,61 @@
+<!-- 03 대상과 사용자 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+<rect x="0" y="0" width="1600" height="900" fill="#FFFFFF"/>
+<g font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif">
+
+  <text x="110" y="104" font-size="22" font-weight="700" fill="#00A651">대상 · 페르소나</text>
+  <text x="110" y="168" font-size="54" font-weight="700" fill="#111111">누가 쓰는가</text>
+  <line x1="110" y1="196" x2="196" y2="196" stroke="#00A651" stroke-width="5"/>
+
+  <!-- ══ 좌측: 사용자 계층 ══ -->
+  <circle cx="118" cy="252" r="4" fill="#00A651"/>
+  <text x="138" y="260" font-size="23" font-weight="600" fill="#111111">착용자 — 보행 동결을 겪는 파킨슨 환자</text>
+  <text x="138" y="290" font-size="19" fill="#666666">기기를 차고 소리를 듣는 사람. 진단 5년 이상이면 절반 이상이 여기 해당한다 [1]</text>
+
+  <circle cx="118" cy="330" r="4" fill="#00A651"/>
+  <text x="138" y="338" font-size="23" font-weight="600" fill="#111111">치료사 — 물리치료사 · 작업치료사</text>
+  <text x="138" y="368" font-size="19" fill="#666666">기기를 차지 않지만 기록을 본다. OLED 화면과 WiFi 전송이 이 사람들 몫이다</text>
+
+  <circle cx="118" cy="408" r="4" fill="#00A651"/>
+  <text x="138" y="416" font-size="23" font-weight="600" fill="#111111">보호자 — 동거 가족</text>
+  <text x="138" y="446" font-size="19" fill="#666666">동결이 언제 잦은지 알면 외출 시간대를 조정할 수 있다</text>
+
+  <!-- 페르소나 카드 -->
+  <rect x="110" y="496" width="660" height="240" rx="8" fill="#F5F5F5"/>
+  <text x="140" y="536" font-size="18" font-weight="700" fill="#00A651">페르소나</text>
+  <text x="140" y="576" font-size="26" font-weight="700" fill="#111111">김정희 (68) · 파킨슨 진단 7년차</text>
+  <text x="140" y="614" font-size="20" fill="#444444">약효가 떨어지는 오후에 동결이 잦다. 거실 문턱과 화장실 입구에서 특히 심하다.<tspan x="140" dy="30">6개월 전 넘어져 손목이 부러진 뒤로 혼자 걷기를 피하게 됐다.</tspan></text>
+  <text x="140" y="668" font-size="16" fill="#666666">연령 · 진단 기간 · 성별은 [1]의 환자 분포에 맞춰 구성했다</text>
+  <line x1="140" y1="686" x2="140" y2="722" stroke="#00A651" stroke-width="4"/>
+  <text x="162" y="714" font-size="22" font-weight="700" fill="#111111">&#8220;딸이 메트로놈 앱을 깔아줬는데, 시끄러워서 안 써요.&#8221;</text>
+
+  <!-- ══ 우측: 문제를 겪는 하루 ══
+       ※ 기기가 동작하는 하루를 그리면 06번 제안을 3장에서 미리 소비한다.
+          여기서는 문제만 보여주고, 해법은 06번에서 처음 공개한다 -->
+  <text x="840" y="258" font-size="20" font-weight="700" fill="#111111">김정희의 하루 &#8212; 동결이 일어난 시점</text>
+
+  <line x1="850" y1="392" x2="1470" y2="392" stroke="#E0E0E0" stroke-width="1"/>
+  <!-- 동결은 문제이지 개입이 아니다. 초록(소리·개입)을 쓰지 않는다 -->
+  <g stroke="#111111" stroke-width="4">
+    <line x1="996" y1="354" x2="996" y2="390"/>
+    <line x1="1166" y1="354" x2="1166" y2="390"/>
+    <line x1="1336" y1="354" x2="1336" y2="390"/>
+  </g>
+  <g font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="16" fill="#666666">
+    <text x="850" y="422">08:00</text>
+    <text x="996" y="422" text-anchor="middle">10:20</text>
+    <text x="1166" y="422" text-anchor="middle">14:05</text>
+    <text x="1336" y="422" text-anchor="middle">18:40</text>
+    <text x="1470" y="422" text-anchor="end">22:00</text>
+  </g>
+  <text x="840" y="340" font-size="16" fill="#666666">동결이 일어난 시점</text>
+
+  <text x="840" y="500" font-size="20" fill="#444444">아침에는 약이 들어 잘 걷는다.<tspan x="840" dy="46">오전, 거실 문턱에서 발이 멈춘다.</tspan><tspan x="840" dy="46">오후에는 약효가 떨어져 화장실 입구에서 또 멈춘다.</tspan><tspan x="840" dy="46" fill="#111111" font-weight="600">저녁, 몸을 돌리다 멈춘다. 손목을 다친 뒤로 혼자 나가지 않는다.</tspan></text>
+
+  <text x="840" y="700" font-size="22" font-weight="700" fill="#00A651">딸이 깔아준 앱은 이 세 번을 위해 하루 종일 울린다</text>
+
+  <line x1="110" y1="772" x2="1490" y2="772" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="110" y="800" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="14" fill="#666666">[1] Ge et al., The prevalence of freezing of gait in Parkinson&#8217;s disease, Chinese Neurosurgical Journal, 2020 (메타분석 29편 &#183; 5,361명)</text>
+  <text x="1490" y="838" text-anchor="end" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="18" fill="#BBBBBB">3 / 13</text>
+</g>
+</svg>

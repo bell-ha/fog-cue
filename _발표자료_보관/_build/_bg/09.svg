@@ -1,0 +1,62 @@
+<!-- 09 하드웨어 구성 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+<rect x="0" y="0" width="1600" height="900" fill="#FFFFFF"/>
+<g font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif">
+  
+  
+  <line x1="110" y1="196" x2="196" y2="196" stroke="#00A651" stroke-width="5"/>
+  
+
+  <!-- ══ 좌: 제약 3개 ══ -->
+  <circle cx="118" cy="306" r="4" fill="#00A651"/>
+  
+  
+
+  <circle cx="118" cy="424" r="4" fill="#00A651"/>
+  
+  
+
+  <circle cx="118" cy="542" r="4" fill="#00A651"/>
+  
+  
+
+  <rect x="110" y="650" width="666" height="86" rx="8" fill="#F5F5F5"/>
+  
+  
+
+  <!-- ══ 우: 핀 배치표 ══ -->
+  
+
+  <g font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="17" fill="#666666">
+    
+  </g>
+  <line x1="840" y1="354" x2="1490" y2="354" stroke="#E0E0E0"/>
+
+  <g font-size="20" fill="#111111">
+    
+    
+    
+  </g>
+  <g font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="18" fill="#666666">
+    
+    
+    
+  </g>
+  <g font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="18" font-weight="500" fill="#0B7A3D">
+    
+    
+    
+  </g>
+  <g stroke="#E0E0E0"><line x1="840" y1="412" x2="1490" y2="412"/><line x1="840" y1="464" x2="1490" y2="464"/>
+    <line x1="840" y1="516" x2="1490" y2="516"/><line x1="840" y1="568" x2="1490" y2="568"/></g>
+
+  <rect x="840" y="628" width="650" height="34" rx="4" fill="#E8F5ED"/>
+  
+
+  
+
+  <line x1="110" y1="772" x2="1490" y2="772" stroke="#E0E0E0" stroke-width="1"/>
+  
+  
+</g>
+</svg>

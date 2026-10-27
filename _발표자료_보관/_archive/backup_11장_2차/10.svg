@@ -1,0 +1,41 @@
+<!-- 10 한계와 대응 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+<rect x="0" y="0" width="1600" height="900" fill="#FFFFFF"/>
+<g font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif">
+  <text x="110" y="104" font-size="22" font-weight="700" fill="#00A651">한계</text>
+  <text x="110" y="168" font-size="54" font-weight="700" fill="#111111">한계 네 가지와 대응책</text>
+  <line x1="110" y1="196" x2="196" y2="196" stroke="#00A651" stroke-width="5"/>
+  <text x="110" y="246" font-size="22" fill="#444444">지금 알고 있는 한계를 먼저 밝히고, 각각의 대응책을 함께 제시한다.</text>
+
+  <!-- 01 -->
+  <rect x="110" y="300" width="666" height="170" rx="8" fill="#F5F5F5"/>
+  <text x="142" y="348" font-size="23" font-weight="700" fill="#111111">갑자기 울리면 놀라서 넘어질 수 있다</text>
+  <line x1="142" y1="378" x2="142" y2="440" stroke="#00A651" stroke-width="4"/>
+  <text x="166" y="402" font-size="20" fill="#444444">진동을 0.5초 먼저 주고 소리를 넣는다.<tspan x="166" dy="30">첫 박은 작은 소리에서 시작해 키운다.</tspan></text>
+
+  <!-- 02 -->
+  <rect x="824" y="300" width="666" height="170" rx="8" fill="#F5F5F5"/>
+  <text x="856" y="348" font-size="23" font-weight="700" fill="#111111">이 방식이 습관화를 막는다는 근거는 아직 없다</text>
+  <line x1="856" y1="378" x2="856" y2="440" stroke="#00A651" stroke-width="4"/>
+  <text x="880" y="402" font-size="20" fill="#444444">같은 사람에게 계속 울리는 방식과 필요할 때만<tspan x="880" dy="30">주는 방식을 번갈아 적용해 비교한다.</tspan></text>
+
+  <!-- 03 -->
+  <rect x="110" y="500" width="666" height="170" rx="8" fill="#F5F5F5"/>
+  <text x="142" y="548" font-size="23" font-weight="700" fill="#111111">파킨슨 환자에게 직접 측정할 수 없다</text>
+  <line x1="142" y1="578" x2="142" y2="640" stroke="#00A651" stroke-width="4"/>
+  <text x="166" y="602" font-size="20" fill="#444444">동결 구간이 표시된 공개 데이터로 검증한다.<tspan x="166" dy="30">직접 차고 찍은 자료는 동작 확인용으로만 쓴다.</tspan></text>
+
+  <!-- 04 -->
+  <rect x="824" y="500" width="666" height="170" rx="8" fill="#F5F5F5"/>
+  <text x="856" y="548" font-size="23" font-weight="700" fill="#111111">동결이 아닌데 울릴 수 있다</text>
+  <line x1="856" y1="578" x2="856" y2="640" stroke="#00A651" stroke-width="4"/>
+  <text x="880" y="602" font-size="20" fill="#444444">임계값 하나로 판정하지 않고, 그 상태가 일정<tspan x="880" dy="30">시간 이어질 때만 동결로 확정한다.</tspan></text>
+
+  <line x1="110" y1="698" x2="110" y2="742" stroke="#00A651" stroke-width="4"/>
+  <text x="134" y="722" font-size="21" font-weight="600" fill="#111111">오탐은 이 분야가 아직 풀지 못한 문제다. 우리도 완전히 없애지는 못하지만,<tspan x="134" dy="28">어디까지 줄일 수 있는지는 확인할 수 있다.</tspan></text>
+
+  <line x1="110" y1="772" x2="1490" y2="772" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="110" y="800" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="14" fill="#666666">이 장치는 의료기기가 아니다. 학습용 KIT로 만든 프로토타입이며 임상 사용을 전제하지 않는다.</text>
+  <text x="1490" y="838" text-anchor="end" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="18" fill="#BBBBBB">10 / 11</text>
+</g>
+</svg>

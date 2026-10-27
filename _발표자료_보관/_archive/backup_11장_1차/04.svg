@@ -1,0 +1,119 @@
+<!-- 04 계속 울리면 익숙해져서 안 듣게 된다 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+
+  <rect x="0" y="0" width="1600" height="900" fill="#FFFFFF"/>
+  <text x="110" y="104" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="22" font-weight="700" fill="#00A651">기존 방식의 한계</text>
+  <text x="110" y="168" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="54" font-weight="700" fill="#111111">계속 울리면 익숙해져서 안 듣게 된다</text>
+  <line x1="110" y1="196" x2="196" y2="196" stroke="#00A651" stroke-width="5"/>
+  <text x="1490" y="838" text-anchor="end" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="18" fill="#BBBBBB">4 / 11</text>
+
+  <circle cx="116" cy="260" r="4.5" fill="#00A651"/>
+  <text x="138" y="268" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="24" fill="#111111">상시 큐잉은 습관화를 일으킨다</text>
+  <text x="138" y="298" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="19" fill="#888888">오래 쓸수록 같은 소리에 반응이 줄어든다 [3]</text>
+  <circle cx="116" cy="338" r="4.5" fill="#00A651"/>
+  <text x="138" y="346" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="24" fill="#111111">인지 부하도 함께 늘어난다</text>
+  <text x="138" y="376" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="19" fill="#888888">박자에 계속 맞추느라 주의력을 더 쓴다 [3]</text>
+  <circle cx="116" cy="416" r="4.5" fill="#00A651"/>
+  <text x="138" y="424" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="24" fill="#111111">상용 제품은 동결을 검출하지 않는다</text>
+  <text x="138" y="454" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="19" fill="#888888">Path Finder는 걸음마다 자동 발화, 메트로놈 앱은 상시 재생</text>
+  <circle cx="116" cy="494" r="4.5" fill="#00A651"/>
+  <text x="138" y="502" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="24" fill="#111111">동결을 검출해 개입하는 건 연구 단계다</text>
+  <text x="138" y="532" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="19" fill="#888888">ParCuR — 자동 검출 후 햅틱 큐, 민감도 94.9% [5]</text>
+
+  <rect x="110" y="600" width="4" height="106" fill="#00A651"/>
+  <text x="136" y="624" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="18" font-weight="700" fill="#00A651">문제 정의</text>
+  <text x="136" y="662" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="23" font-weight="700" fill="#111111">메트로놈은 20분 내내 울리고 있다.</text>
+  <text x="136" y="694" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="23" font-weight="700" fill="#111111">익숙해져서 반응이 사라졌을 뿐이다.</text>
+
+  <text x="850" y="268" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="20" font-weight="700" fill="#111111">20분 보행 세션 — 소리와 반응</text>
+  <text x="850" y="298" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="15" fill="#888888">메트로놈 소리</text>
+  <text x="1470" y="298" text-anchor="end" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="14" fill="#888888">20분 내내 켜짐</text>
+  <text x="850" y="394" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="15" fill="#888888">환자의 반응</text>
+  <text x="1470" y="394" text-anchor="end" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="14" fill="#888888">%</text>
+  <rect x="850" y="308" width="620" height="44" fill="#F5F5F5"/>
+  <text x="840" y="409" text-anchor="end" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="13" fill="#888888">100</text>
+  <text x="840" y="459" text-anchor="end" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="13" fill="#888888">50</text>
+  <text x="840" y="509" text-anchor="end" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="13" fill="#888888">0</text>
+  <line x1="850" y1="454" x2="1470" y2="454" stroke="#E0E0E0" stroke-width="1" stroke-dasharray="3 5"/>
+  <g stroke="#CFCFCF" stroke-width="2">
+    <line x1="850" y1="314" x2="850" y2="352"/>
+    <line x1="864" y1="314" x2="864" y2="352"/>
+    <line x1="878" y1="314" x2="878" y2="352"/>
+    <line x1="892" y1="314" x2="892" y2="352"/>
+    <line x1="906" y1="314" x2="906" y2="352"/>
+    <line x1="920" y1="314" x2="920" y2="352"/>
+    <line x1="934" y1="314" x2="934" y2="352"/>
+    <line x1="948" y1="314" x2="948" y2="352"/>
+    <line x1="962" y1="314" x2="962" y2="352"/>
+    <line x1="976" y1="314" x2="976" y2="352"/>
+    <line x1="990" y1="314" x2="990" y2="352"/>
+    <line x1="1004" y1="314" x2="1004" y2="352"/>
+    <line x1="1018" y1="314" x2="1018" y2="352"/>
+    <line x1="1032" y1="314" x2="1032" y2="352"/>
+    <line x1="1046" y1="314" x2="1046" y2="352"/>
+    <line x1="1060" y1="314" x2="1060" y2="352"/>
+    <line x1="1074" y1="314" x2="1074" y2="352"/>
+    <line x1="1088" y1="314" x2="1088" y2="352"/>
+    <line x1="1102" y1="314" x2="1102" y2="352"/>
+    <line x1="1116" y1="314" x2="1116" y2="352"/>
+    <line x1="1130" y1="314" x2="1130" y2="352"/>
+    <line x1="1144" y1="314" x2="1144" y2="352"/>
+    <line x1="1158" y1="314" x2="1158" y2="352"/>
+    <line x1="1172" y1="314" x2="1172" y2="352"/>
+    <line x1="1186" y1="314" x2="1186" y2="352"/>
+    <line x1="1200" y1="314" x2="1200" y2="352"/>
+    <line x1="1214" y1="314" x2="1214" y2="352"/>
+    <line x1="1228" y1="314" x2="1228" y2="352"/>
+    <line x1="1242" y1="314" x2="1242" y2="352"/>
+    <line x1="1256" y1="314" x2="1256" y2="352"/>
+    <line x1="1270" y1="314" x2="1270" y2="352"/>
+    <line x1="1284" y1="314" x2="1284" y2="352"/>
+    <line x1="1298" y1="314" x2="1298" y2="352"/>
+    <line x1="1312" y1="314" x2="1312" y2="352"/>
+    <line x1="1326" y1="314" x2="1326" y2="352"/>
+    <line x1="1340" y1="314" x2="1340" y2="352"/>
+    <line x1="1354" y1="314" x2="1354" y2="352"/>
+    <line x1="1368" y1="314" x2="1368" y2="352"/>
+    <line x1="1382" y1="314" x2="1382" y2="352"/>
+    <line x1="1396" y1="314" x2="1396" y2="352"/>
+    <line x1="1410" y1="314" x2="1410" y2="352"/>
+    <line x1="1424" y1="314" x2="1424" y2="352"/>
+    <line x1="1438" y1="314" x2="1438" y2="352"/>
+    <line x1="1452" y1="314" x2="1452" y2="352"/>
+    <line x1="1466" y1="314" x2="1466" y2="352"/>
+  </g>
+
+  <path d="M850,404.0 L858,412.3 L866,420.0 L874,427.0 L882,433.4 L890,439.3 L898,444.7 L906,449.6 L914,454.1 L922,458.3 L930,462.1 L938,465.6 L946,468.8 L954,471.7 L960.7654979979861,474.0 L960.765,504 L850,504 Z" fill="#D3EDDE"/>
+  <path d="M960.7654979979861,474.0 L962,474.4 L970,476.9 L978,479.1 L986,481.2 L994,483.1 L1002,484.8 L1010,486.4 L1018,487.9 L1026,489.2 L1034,490.5 L1054,493.1 L1074,495.2 L1094,497.0 L1114,498.3 L1134,499.4 L1154,500.3 L1174,501.0 L1194,501.6 L1214,502.1 L1234,502.5 L1254,502.8 L1274,503.0 L1294,503.2 L1314,503.4 L1334,503.5 L1354,503.6 L1374,503.7 L1394,503.7 L1414,503.8 L1434,503.8 L1454,503.9 L1470,503.9 L1470,504 L960.765,504 Z" fill="#EFF5F1"/>
+  <path d="M850,404.0 L858,412.3 L866,420.0 L874,427.0 L882,433.4 L890,439.3 L898,444.7 L906,449.6 L914,454.1 L922,458.3 L930,462.1 L938,465.6 L946,468.8 L954,471.7 L962,474.4 L970,476.9 L978,479.1 L986,481.2 L994,483.1 L1002,484.8 L1010,486.4 L1018,487.9 L1026,489.2 L1034,490.5 L1054,493.1 L1074,495.2 L1094,497.0 L1114,498.3 L1134,499.4 L1154,500.3 L1174,501.0 L1194,501.6 L1214,502.1 L1234,502.5 L1254,502.8 L1274,503.0 L1294,503.2 L1314,503.4 L1334,503.5 L1354,503.6 L1374,503.7 L1394,503.7 L1414,503.8 L1434,503.8 L1454,503.9 L1470,503.9" fill="none" stroke="#0B7A3D" stroke-width="2.5" stroke-linejoin="round"/>
+  <line x1="961" y1="404" x2="961" y2="504" stroke="#999999" stroke-width="1" stroke-dasharray="3 4"/>
+  <text x="969" y="422" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="13" fill="#888888">반응 소실 — 소리는 그대로</text>
+
+  <!-- ══ 04·05 공유 플롯 좌표 — 두 장 완전 동일 ══ -->
+  <line x1="850" y1="352" x2="1470" y2="352" stroke="#CCCCCC" stroke-width="1"/>
+  <line x1="850" y1="504" x2="1470" y2="504" stroke="#666666" stroke-width="1.5"/>
+  <g stroke="#999999" stroke-width="1">
+    <line x1="850" y1="504" x2="850" y2="511"/>
+    <line x1="1005" y1="504" x2="1005" y2="511"/>
+    <line x1="1160" y1="504" x2="1160" y2="511"/>
+    <line x1="1315" y1="504" x2="1315" y2="511"/>
+    <line x1="1470" y1="504" x2="1470" y2="511"/>
+  </g>
+  <text x="850" y="528" text-anchor="middle" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="14" fill="#888888">0</text>
+  <text x="1005" y="528" text-anchor="middle" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="14" fill="#888888">5</text>
+  <text x="1160" y="528" text-anchor="middle" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="14" fill="#888888">10</text>
+  <text x="1315" y="528" text-anchor="middle" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="14" fill="#888888">15</text>
+  <text x="1470" y="528" text-anchor="middle" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="14" fill="#888888">20</text>
+  <text x="1160" y="554" text-anchor="middle" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="15" fill="#888888">경과 시간 (분)</text>
+  <circle cx="936" cy="584" r="10" fill="none" stroke="#777777" stroke-width="1.5"/>
+  <circle cx="1117" cy="584" r="10" fill="none" stroke="#777777" stroke-width="1.5"/>
+  <circle cx="1342" cy="584" r="10" fill="none" stroke="#777777" stroke-width="1.5"/>
+  <text x="850" y="589" text-anchor="end" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="14" fill="#888888">동결　</text>
+  <text x="850" y="640" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="21" font-weight="700" fill="#00A651">소리는 계속 울린다. 사라진 것은 반응이다.</text>
+
+  <line x1="110" y1="772" x2="1490" y2="772" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="110" y="800" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="14" fill="#888888">[3] Pallavi et al., On-Demand Cueing Sensitive to Step Variability, IEEE J Transl Eng Health Med, 2025</text>
+  <text x="110" y="824" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="14" fill="#888888">[4] Slemenšek et al., Wearable Online Freezing of Gait Detection and Cueing System, Bioengineering, 2024 (n=9 예비연구)</text>
+  <text x="110" y="848" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="14" fill="#888888">[5] ParCuR — 동결 자동 검출 기반 햅틱 큐잉, Sensors, 2025</text>
+
+</svg>

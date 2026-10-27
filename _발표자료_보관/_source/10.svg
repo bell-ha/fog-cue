@@ -1,0 +1,66 @@
+<!-- 10 신호처리 설계 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+<rect x="0" y="0" width="1600" height="900" fill="#FFFFFF"/>
+<g font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif">
+  <text x="110" y="104" font-size="22" font-weight="700" fill="#00A651">개발 세부 ③ 신호처리</text>
+  <text x="110" y="168" font-size="54" font-weight="700" fill="#111111">값은 감으로 정하지 않았다</text>
+  <line x1="110" y1="196" x2="196" y2="196" stroke="#00A651" stroke-width="5"/>
+  <text x="110" y="246" font-size="22" fill="#444444">가속도 신호 하나로 걸음과 동결을 동시에 본다. 그 둘을 가르는 것이 아래 네 개의 값이다.</text>
+
+  <!-- ══ 좌: 파라미터와 근거 ══ -->
+  <circle cx="118" cy="306" r="4" fill="#00A651"/>
+  <text x="138" y="314" font-size="22" font-weight="600" fill="#111111">샘플링 64 Hz — 검증 데이터와 같게</text>
+  <text x="138" y="344" font-size="19" fill="#666666">검증에 쓸 DAPHNet이 64 Hz다. 기기를 같은 값으로 맞춰야<tspan x="138" dy="26">PC에서 정한 임계값이 그대로 넘어간다. 저역통과는 21 Hz.</tspan></text>
+
+  <circle cx="118" cy="424" r="4" fill="#00A651"/>
+  <text x="138" y="432" font-size="22" font-weight="600" fill="#111111">윈도우 256샘플 = 정확히 4초</text>
+  <text x="138" y="462" font-size="19" fill="#666666">Freeze Index를 처음 정의한 연구와 같은 길이다. 분해능 0.25 Hz.<tspan x="138" dy="26">75% 겹쳐서 1초마다 판정한다.</tspan></text>
+
+  <circle cx="118" cy="542" r="4" fill="#00A651"/>
+  <text x="138" y="550" font-size="22" font-weight="600" fill="#111111">임계 초과가 2회 연속일 때만</text>
+  <text x="138" y="580" font-size="19" fill="#666666">약 2초다. 계단 · 방향 전환 · 물건을 집으려 멈추는 동작은<tspan x="138" dy="26">순간적으로 임계를 넘지만 이어지지 않는다.</tspan></text>
+
+  <circle cx="118" cy="660" r="4" fill="#00A651"/>
+  <text x="138" y="668" font-size="22" font-weight="600" fill="#111111">케이던스는 직전 4걸음의 중앙값</text>
+  <text x="138" y="698" font-size="19" fill="#666666">평균이 아니라 중앙값을 쓴다. 한 번 튄 값에 템포가 끌려가지<tspan x="138" dy="26">않게 하기 위해서다. 불응 구간 250 ms로 중복 검출을 막는다.</tspan></text>
+
+  <!-- ══ 우: 상태 전이도 ══ -->
+  <text x="840" y="300" font-size="20" font-weight="700" fill="#111111">상태 전이</text>
+
+  <rect x="880" y="330" width="200" height="62" rx="6" fill="#F5F5F5"/>
+  <text x="980" y="360" text-anchor="middle" font-size="21" font-weight="700" fill="#111111">걷는 중</text>
+  <text x="980" y="382" text-anchor="middle" font-size="16" fill="#666666">조용함 · 계속 계산</text>
+
+  <rect x="880" y="470" width="200" height="62" rx="6" fill="#00A651"/>
+  <text x="980" y="500" text-anchor="middle" font-size="21" font-weight="700" fill="#FFFFFF">개입</text>
+  <text x="980" y="522" text-anchor="middle" font-size="16" fill="#D8EFE2">부저 구동</text>
+
+  <rect x="1230" y="330" width="200" height="62" rx="6" fill="#F5F5F5"/>
+  <text x="1330" y="360" text-anchor="middle" font-size="21" font-weight="700" fill="#111111">정지</text>
+  <text x="1330" y="382" text-anchor="middle" font-size="16" fill="#666666">걸음 없음</text>
+
+  <!-- 화살표 -->
+  <line x1="980" y1="392" x2="980" y2="462" stroke="#111111" stroke-width="2"/>
+  <polygon points="980,470 975,458 985,458" fill="#111111"/>
+  <text x="996" y="432" font-size="17" fill="#111111">임계 2회 연속</text>
+
+  <line x1="1120" y1="500" x2="1120" y2="366" stroke="#111111" stroke-width="2"/>
+  <line x1="1080" y1="500" x2="1120" y2="500" stroke="#111111" stroke-width="2"/>
+  <line x1="1120" y1="366" x2="1222" y2="366" stroke="#111111" stroke-width="2"/>
+  <polygon points="1230,366 1218,361 1218,371" fill="#111111"/>
+  <text x="1134" y="444" font-size="17" fill="#111111">걸음 재검출</text>
+
+  <line x1="1330" y1="392" x2="1330" y2="560" stroke="#666666" stroke-width="2" stroke-dasharray="5 4"/>
+  <line x1="1330" y1="560" x2="988" y2="560" stroke="#666666" stroke-width="2" stroke-dasharray="5 4"/>
+  <polygon points="980,560 992,555 992,565" fill="#666666"/>
+  <text x="1046" y="584" font-size="17" fill="#666666">택트스위치 — 수동 요청</text>
+
+  <rect x="840" y="628" width="650" height="88" rx="8" fill="#F5F5F5"/>
+  <text x="866" y="662" font-size="18" font-weight="700" fill="#00A651">놀라지 않게</text>
+  <text x="866" y="692" font-size="19" fill="#444444">개입할 때 진동을 0.5초 먼저 주고, 첫 박은 작은 소리에서<tspan x="866" dy="26">시작해 키운다.</tspan></text>
+
+  <line x1="110" y1="772" x2="1490" y2="772" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="110" y="800" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="14" fill="#666666">240 MHz에서 256점 FFT는 약 1~2 ms다. 1초마다 한 번이므로 ESP32에서 여유 있게 돈다.</text>
+  <text x="1490" y="838" text-anchor="end" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="18" fill="#BBBBBB">10 / 13</text>
+</g>
+</svg>

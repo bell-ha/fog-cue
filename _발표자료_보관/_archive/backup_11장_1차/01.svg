@@ -1,0 +1,20 @@
+<!-- 01 표지 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+
+  <rect x="0" y="0" width="1600" height="900" fill="#FFFFFF"/>
+
+  <!-- 워드마크 -->
+  <text x="110" y="500" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-weight="700" font-size="110" fill="#111111">FoG-Cue</text>
+
+  <!-- 워드마크 우측 : 초록 정식 제목 + 회색 영문 확장 -->
+  <text x="600" y="432" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-weight="700" font-size="22" fill="#00A651">IMU 기반 보행 동결 검출 및 케이던스 적응형 청각 큐잉 시스템</text>
+  <text x="600" y="500" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="44" fill="#888888">Freezing-of-Gait Adaptive Cueing</text>
+
+  <text x="110" y="566" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="26" fill="#444444">Freeze Index로 보행 동결을 검출하고, 직전 케이던스에 맞춘 템포로 수동 부저를 구동하는 허리 착용 장치</text>
+
+  <text x="110" y="626" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="22" fill="#888888">이종하</text>
+
+  <text x="110" y="838" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-weight="700" font-size="20" fill="#00A651">단국대학교 뉴뮤직과 · 컴퓨터공학</text>
+  <text x="1490" y="838" text-anchor="end" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="18" fill="#BBBBBB">1 / 11</text>
+
+</svg>

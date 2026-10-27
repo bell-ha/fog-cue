@@ -1,0 +1,77 @@
+<!-- 08 페르소나와 대상 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <rect x="0" y="0" width="1600" height="900" fill="#F4F2ED"/>
+
+  <text x="110" y="104" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="20" fill="#8A9098">08</text>
+  <rect x="1180" y="80" width="140" height="34" rx="3" fill="none" stroke="#DCD8D0"/>
+  <text x="1250" y="103" text-anchor="middle" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="18" letter-spacing="0.08em" fill="#8A9098">페르소나</text>
+  <rect x="1340" y="80" width="150" height="34" rx="3" fill="none" stroke="#DCD8D0"/>
+  <text x="1415" y="103" text-anchor="middle" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="18" letter-spacing="0.08em" fill="#8A9098">대상</text>
+
+  <text x="110" y="232" font-family="Hahmlet,'Nanum Myeongjo','Apple SD Gothic Neo',serif" font-weight="600" font-size="54" fill="#14181C">시끄러워서, 안 쓴다</text>
+  <line x1="110" y1="272" x2="1490" y2="272" stroke="#DCD8D0" stroke-width="1"/>
+
+  <!-- ══ 좌: 페르소나 ══ -->
+  <g fill="#14181C">
+    <circle cx="186" cy="356" r="25"/>
+    <path d="M 186 384 q -29 6 -32 40 l -5 70 q -1 11 10 11 l 54 0 q 11 0 10 -11 l -5 -70 q -3 -34 -32 -40 z"/>
+    <rect x="153" y="392" width="11" height="66" rx="5"/>
+    <rect x="208" y="392" width="11" height="66" rx="5"/>
+    <rect x="167" y="502" width="13" height="70" rx="6"/>
+    <rect x="192" y="502" width="13" height="70" rx="6"/>
+    <rect x="159" y="568" width="32" height="10" rx="5"/>
+    <rect x="184" y="568" width="32" height="10" rx="5"/>
+  </g>
+  <line x1="236" y1="396" x2="236" y2="578" stroke="#14181C" stroke-width="5" stroke-linecap="round"/>
+
+  <text x="292" y="352" font-family="Hahmlet,'Nanum Myeongjo','Apple SD Gothic Neo',serif" font-weight="600" font-size="34" fill="#14181C">68세 · 파킨슨 7년차</text>
+  <text x="292" y="402" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="23" fill="#5A636B">약효가 떨어지는 시간대에 동결이 심해진다.<tspan x="292" dy="36">거실 문턱, 화장실 입구, 몸을 돌릴 때.</tspan><tspan x="292" dy="36">6개월 전 넘어져 손목이 부러졌다.</tspan><tspan x="292" dy="36">그 뒤로 혼자 걷기가 무섭다.</tspan></text>
+
+  <line x1="292" y1="562" x2="292" y2="648" stroke="#A87218" stroke-width="3"/>
+  <text x="322" y="598" font-family="Hahmlet,'Nanum Myeongjo','Apple SD Gothic Neo',serif" font-weight="600" font-size="29" fill="#14181C">&#8220;딸이 앱을 깔아줬는데,<tspan x="322" dy="42">시끄러워서 안 써.&#8221;</tspan></text>
+
+  <!-- ══ 우: 하루 타임라인 ══ -->
+  <text x="900" y="330" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="18" letter-spacing="0.08em" fill="#8A9098">하루</text>
+
+  <line x1="900" y1="438" x2="1470" y2="438" stroke="#DCD8D0" stroke-width="1"/>
+  <g stroke="#A87218" stroke-width="3">
+    <line x1="1006" y1="400" x2="1006" y2="430"/><line x1="1016" y1="406" x2="1016" y2="430"/><line x1="1026" y1="406" x2="1026" y2="430"/>
+    <line x1="1172" y1="400" x2="1172" y2="430"/><line x1="1186" y1="406" x2="1186" y2="430"/><line x1="1200" y1="406" x2="1200" y2="430"/>
+    <line x1="1348" y1="400" x2="1348" y2="430"/><line x1="1356" y1="406" x2="1356" y2="430"/><line x1="1364" y1="406" x2="1364" y2="430"/>
+  </g>
+  <g font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="17" fill="#8A9098">
+    <text x="900" y="468">08:00</text>
+    <text x="1016" y="468" text-anchor="middle">10:20</text>
+    <text x="1186" y="468" text-anchor="middle">14:05</text>
+    <text x="1356" y="468" text-anchor="middle">18:40</text>
+    <text x="1470" y="468" text-anchor="end">22:00</text>
+  </g>
+
+  <text x="900" y="524" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="23" fill="#5A636B">아침, 벨트를 찬다 &#8212; 아무 소리도 나지 않는다.<tspan x="900" dy="36">문턱 앞에서 발이 멈춘다 &#8212; 박자가 나온다 &#8212; 다시 조용해진다.</tspan><tspan x="900" dy="36">저녁, 충전기에 올리면 오늘의 동결 횟수와 시점이 전송된다.</tspan><tspan x="900" dy="36" fill="#14181C">다음 진료에서 치료사가 데이터로 말한다.</tspan></text>
+
+  <!-- ══ 하단: 대상 3단 ══ -->
+  <line x1="110" y1="692" x2="1490" y2="692" stroke="#DCD8D0" stroke-width="1"/>
+  <text x="110" y="726" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="17" letter-spacing="0.08em" fill="#A87218">1차</text>
+  <text x="110" y="760" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="22" fill="#14181C">보행 동결을 겪는 파킨슨 환자</text>
+  <text x="110" y="790" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="19" fill="#8A9098">착용하고 소리를 듣는 사람</text>
+
+  <text x="596" y="726" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="17" letter-spacing="0.08em" fill="#8A9098">2차</text>
+  <text x="596" y="760" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="22" fill="#14181C">물리치료사 · 작업치료사</text>
+  <text x="596" y="790" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="19" fill="#8A9098">착용하지 않지만 기록을 보는 사람</text>
+
+  <text x="1082" y="726" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="17" letter-spacing="0.08em" fill="#8A9098">확장</text>
+  <text x="1082" y="760" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="22" fill="#14181C">뇌졸중 후 보행 재활</text>
+  <text x="1082" y="790" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="19" fill="#8A9098">노인 보행 훈련</text>
+
+  <!-- 진행 틱 : i=7 활성 -->
+  <g stroke="#DCD8D0" stroke-width="2">
+    <line x1="110" y1="828" x2="110" y2="838"/><line x1="128" y1="828" x2="128" y2="838"/>
+    <line x1="146" y1="828" x2="146" y2="838"/><line x1="164" y1="828" x2="164" y2="838"/>
+    <line x1="182" y1="828" x2="182" y2="838"/><line x1="200" y1="828" x2="200" y2="838"/>
+    <line x1="218" y1="828" x2="218" y2="838"/>
+    <line x1="254" y1="828" x2="254" y2="838"/><line x1="272" y1="828" x2="272" y2="838"/>
+    <line x1="290" y1="828" x2="290" y2="838"/><line x1="308" y1="828" x2="308" y2="838"/>
+  </g>
+  <line x1="236" y1="812" x2="236" y2="838" stroke="#A87218" stroke-width="3"/>
+  <text x="1490" y="838" text-anchor="end" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="16" letter-spacing="0.08em" fill="#8A9098">아타카 ATTACCA</text>
+</svg>

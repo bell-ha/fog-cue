@@ -1,0 +1,62 @@
+<!-- 09 하드웨어 구성 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+<rect x="0" y="0" width="1600" height="900" fill="#FFFFFF"/>
+<g font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif">
+  <text x="110" y="104" font-size="22" font-weight="700" fill="#00A651">개발 세부 ② 하드웨어</text>
+  <text x="110" y="168" font-size="54" font-weight="700" fill="#111111">핀 배치는 제약이 정한다</text>
+  <line x1="110" y1="196" x2="196" y2="196" stroke="#00A651" stroke-width="5"/>
+  <text x="110" y="246" font-size="22" fill="#444444">부품은 정해졌고 이제 어디에 꽂을지가 남았다. 그런데 자리는 마음대로 고를 수 없다.</text>
+
+  <!-- ══ 좌: 제약 3개 ══ -->
+  <circle cx="118" cy="306" r="4" fill="#00A651"/>
+  <text x="138" y="314" font-size="23" font-weight="600" fill="#111111">WiFi를 켜면 ADC2를 못 쓴다</text>
+  <text x="138" y="346" font-size="19" fill="#666666">ESP32의 ADC2 채널은 WiFi가 켜져 있는 동안 읽을 수 없다.<tspan x="138" dy="27">심박센서를 ADC1 계열인 GPIO34에 붙인 이유다.</tspan></text>
+
+  <circle cx="118" cy="424" r="4" fill="#00A651"/>
+  <text x="138" y="432" font-size="23" font-weight="600" fill="#111111">가속도계와 화면이 한 버스를 쓴다</text>
+  <text x="138" y="464" font-size="19" fill="#666666">MPU-6050은 0x68, OLED는 0x3C로 주소가 달라 충돌하지 않는다.<tspan x="138" dy="27">두 모듈에 풀업 저항이 이미 실려 있어 따로 달지 않는다.</tspan></text>
+
+  <circle cx="118" cy="542" r="4" fill="#00A651"/>
+  <text x="138" y="550" font-size="23" font-weight="600" fill="#111111">수동 부저는 주파수를 받아야 운다</text>
+  <text x="138" y="582" font-size="19" fill="#666666">능동 부저와 달리 전원만으로는 울지 않는다. LEDC로 주파수를<tspan x="138" dy="27">실어 보내므로 첫 박과 나머지 박의 음높이를 다르게 낼 수 있다.</tspan></text>
+
+  <rect x="110" y="650" width="666" height="86" rx="8" fill="#F5F5F5"/>
+  <text x="140" y="686" font-size="18" font-weight="700" fill="#00A651">전력</text>
+  <text x="140" y="716" font-size="20" fill="#444444">WiFi를 끄면 약 35 mA. 켜면 5~8배로 뛴다. 충전 중에만 켠다.</text>
+
+  <!-- ══ 우: 핀 배치표 ══ -->
+  <text x="840" y="300" font-size="20" font-weight="700" fill="#111111">핀 배치</text>
+
+  <g font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="17" fill="#666666">
+    <text x="840" y="340">부품</text><text x="1140" y="340">인터페이스</text><text x="1380" y="340">핀</text>
+  </g>
+  <line x1="840" y1="354" x2="1490" y2="354" stroke="#E0E0E0"/>
+
+  <g font-size="20" fill="#111111">
+    <text x="840" y="392">MPU-6050</text><text x="840" y="444">OLED</text>
+    <text x="840" y="496">수동 부저</text><text x="840" y="548">택트스위치</text>
+    <text x="840" y="600">심박센서</text>
+  </g>
+  <g font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="18" fill="#666666">
+    <text x="1140" y="392">I2C</text><text x="1140" y="444">I2C</text>
+    <text x="1140" y="496">PWM</text><text x="1140" y="548">GPIO in</text>
+    <text x="1140" y="600">ADC1</text>
+  </g>
+  <g font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="18" font-weight="500" fill="#0B7A3D">
+    <text x="1380" y="392">21 · 22</text><text x="1380" y="444">21 · 22</text>
+    <text x="1380" y="496">25</text><text x="1380" y="548">14</text>
+    <text x="1380" y="600">34</text>
+  </g>
+  <g stroke="#E0E0E0"><line x1="840" y1="412" x2="1490" y2="412"/><line x1="840" y1="464" x2="1490" y2="464"/>
+    <line x1="840" y1="516" x2="1490" y2="516"/><line x1="840" y1="568" x2="1490" y2="568"/></g>
+
+  <rect x="840" y="628" width="650" height="34" rx="4" fill="#E8F5ED"/>
+  <text x="860" y="651" font-size="17" fill="#0B7A3D">21 · 22를 두 부품이 공유한다 — 주소가 달라 충돌하지 않는다</text>
+
+  <text x="840" y="706" font-size="19" fill="#666666">택트스위치는 내부 풀업을 켜서 쓴다. 누르면 LOW다.<tspan x="840" dy="27">전원은 프로토타입 단계에서 USB 보조배터리로 공급한다.</tspan></text>
+
+  <line x1="110" y1="772" x2="1490" y2="772" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="110" y="800" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="14" fill="#666666">부품은 모두 08번의 학습 KIT 구성품이다. 추가 구매 없음.</text>
+  <text x="1490" y="838" text-anchor="end" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="18" fill="#BBBBBB">9 / 13</text>
+</g>
+</svg>

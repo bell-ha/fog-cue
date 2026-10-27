@@ -1,0 +1,68 @@
+<!-- 09 구현 계획 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <rect x="0" y="0" width="1600" height="900" fill="#F4F2ED"/>
+  <text x="110" y="104" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="20" fill="#8A9098">09</text>
+
+  <text x="110" y="232" font-family="Hahmlet,'Nanum Myeongjo','Apple SD Gothic Neo',serif" font-weight="600" font-size="54" fill="#14181C">어떻게 만들 것인가</text>
+  <line x1="110" y1="272" x2="1490" y2="272" stroke="#DCD8D0" stroke-width="1"/>
+
+  <text x="110" y="318" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="24" fill="#5A636B">동결 감지를 먼저 붙잡으면 몇 주가 날아간다. 걸음을 세는 것부터 쌓는다.</text>
+
+  <!-- 최소 목표 경계선 -->
+  <line x1="798" y1="368" x2="798" y2="724" stroke="#8A9098" stroke-width="1" stroke-dasharray="5 5"/>
+  <text x="786" y="750" text-anchor="end" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="17" fill="#14181C">&#8592; 여기까지가 최소 목표</text>
+  <text x="812" y="750" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="17" fill="#8A9098">도전 목표 &#8594;</text>
+
+  <!-- 1단계 -->
+  <line x1="110" y1="368" x2="430" y2="368" stroke="#14181C" stroke-width="2"/>
+  <text x="110" y="404" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="17" letter-spacing="0.08em" fill="#8A9098">1단계 &#183; 2~3주</text>
+  <text x="110" y="448" font-family="Hahmlet,'Nanum Myeongjo','Apple SD Gothic Neo',serif" font-weight="600" font-size="29" fill="#14181C">걸음을 센다</text>
+  <text x="110" y="496" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="21" fill="#5A636B">가속도를 일정 주기로 읽고,<tspan x="110" dy="32">3축을 합쳐 봉우리를 찾는다.</tspan><tspan x="110" dy="32">한 걸음 뒤 불응 구간을 둬</tspan><tspan x="110" dy="32">중복 검출을 막는다.</tspan></text>
+  <rect x="110" y="636" width="320" height="76" fill="#E8E4DC"/>
+  <line x1="110" y1="636" x2="110" y2="712" stroke="#14181C" stroke-width="2"/>
+  <text x="128" y="666" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="15" fill="#8A9098">성공 기준</text>
+  <text x="128" y="696" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="20" fill="#14181C">100걸음에 100이 뜬다</text>
+
+  <!-- 2단계 -->
+  <line x1="462" y1="368" x2="782" y2="368" stroke="#14181C" stroke-width="2"/>
+  <text x="462" y="404" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="17" letter-spacing="0.08em" fill="#8A9098">2단계 &#183; 2~3주</text>
+  <text x="462" y="448" font-family="Hahmlet,'Nanum Myeongjo','Apple SD Gothic Neo',serif" font-weight="600" font-size="29" fill="#14181C">템포가 따라온다</text>
+  <text x="462" y="496" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="21" fill="#5A636B">최근 몇 걸음의 간격으로<tspan x="462" dy="32">현재 보행 속도를 추정하고,</tspan><tspan x="462" dy="32">그 템포로 수동 부저를 울린다.</tspan><tspan x="462" dy="32">속도를 바꾸면 소리도 따라온다.</tspan></text>
+  <rect x="462" y="636" width="320" height="76" fill="#E8E4DC"/>
+  <line x1="462" y1="636" x2="462" y2="712" stroke="#14181C" stroke-width="2"/>
+  <text x="480" y="666" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="15" fill="#8A9098">성공 기준</text>
+  <text x="480" y="696" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="20" fill="#14181C">적응형 리듬 자극 완성</text>
+
+  <!-- 3단계 -->
+  <line x1="814" y1="368" x2="1134" y2="368" stroke="#8A9098" stroke-width="2"/>
+  <text x="814" y="404" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="17" letter-spacing="0.08em" fill="#8A9098">3단계 &#183; 3~4주</text>
+  <text x="814" y="448" font-family="Hahmlet,'Nanum Myeongjo','Apple SD Gothic Neo',serif" font-weight="600" font-size="29" fill="#14181C">동결을 감지한다</text>
+  <text x="814" y="496" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="21" fill="#5A636B">먼저 PC에서 파이썬으로<tspan x="814" dy="32">Freeze Index를 구현하고</tspan><tspan x="814" dy="32">공개 데이터셋으로 검증한 뒤에</tspan><tspan x="814" dy="32">ESP32로 옮긴다.</tspan></text>
+  <rect x="814" y="636" width="320" height="76" fill="#E8E4DC"/>
+  <line x1="814" y1="636" x2="814" y2="712" stroke="#8A9098" stroke-width="2"/>
+  <text x="832" y="666" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="15" fill="#8A9098">성공 기준</text>
+  <text x="832" y="696" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="20" fill="#14181C">동결에서만 울린다</text>
+
+  <!-- 4단계 -->
+  <line x1="1166" y1="368" x2="1486" y2="368" stroke="#DCD8D0" stroke-width="2"/>
+  <text x="1166" y="404" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="17" letter-spacing="0.08em" fill="#8A9098">4단계 &#183; 여유 시</text>
+  <text x="1166" y="448" font-family="Hahmlet,'Nanum Myeongjo','Apple SD Gothic Neo',serif" font-weight="600" font-size="29" fill="#14181C">나머지를 붙인다</text>
+  <text x="1166" y="496" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="21" fill="#5A636B">OLED 기록 화면, 택트스위치<tspan x="1166" dy="32">수동 요청, WiFi 전송,</tspan><tspan x="1166" dy="32">정지 구간 심박 게이팅,</tspan><tspan x="1166" dy="32">배터리 내장과 케이스.</tspan></text>
+  <rect x="1166" y="636" width="320" height="76" fill="#E8E4DC"/>
+  <line x1="1166" y1="636" x2="1166" y2="712" stroke="#DCD8D0" stroke-width="2"/>
+  <text x="1184" y="666" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="15" fill="#8A9098">순서 주의</text>
+  <text x="1184" y="696" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="20" fill="#14181C">케이스는 가장 마지막</text>
+
+  <text x="110" y="782" font-family="Pretendard,'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="21" fill="#5A636B">각 단계가 끝날 때마다 &#8220;여기까지만 해도 발표할 수 있는 상태&#8221;가 유지된다. 프로토타입 전원은 USB 보조배터리로 시작한다.</text>
+
+  <g stroke="#DCD8D0" stroke-width="2">
+    <line x1="110" y1="828" x2="110" y2="838"/><line x1="128" y1="828" x2="128" y2="838"/>
+    <line x1="146" y1="828" x2="146" y2="838"/><line x1="164" y1="828" x2="164" y2="838"/>
+    <line x1="182" y1="828" x2="182" y2="838"/><line x1="200" y1="828" x2="200" y2="838"/>
+    <line x1="218" y1="828" x2="218" y2="838"/><line x1="236" y1="828" x2="236" y2="838"/>
+    <line x1="272" y1="828" x2="272" y2="838"/>
+    <line x1="290" y1="828" x2="290" y2="838"/><line x1="308" y1="828" x2="308" y2="838"/>
+  </g>
+  <line x1="254" y1="812" x2="254" y2="838" stroke="#A87218" stroke-width="3"/>
+  <text x="1490" y="838" text-anchor="end" font-family="'IBM Plex Mono','D2Coding',Menlo,monospace" font-size="16" letter-spacing="0.08em" fill="#8A9098">아타카 ATTACCA</text>
+</svg>
