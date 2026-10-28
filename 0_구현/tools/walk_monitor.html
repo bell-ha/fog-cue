@@ -1,0 +1,906 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>보행동결 자극기</title>
+<!--
+  walk_monitor.html — ESP32를 USB로 연결해 쓰는 화면. Chrome에서 연다.
+
+  탭 세 개. 탭을 바꾸면 아래 화면이 통째로 바뀐다.
+    기기 테스트  택트스위치 · 부저 · 센서 · 걸음 세기를 한 화면에서 확인한다. 이 탭에서는 버튼이 소리를 켜지 않는다.
+    기능 시험    사용자가 실제로 쓰는 화면. 지금 상태 · 소리 크기 · 오늘 울린 기록.
+    데이터 기록  상황별 원본을 CSV로 모은다. 동결 흉내 기록에는 판정 채점이 붙는다.
+  소리가 나는 동안에는 어느 탭에서든 맨 위에 '소리 끄기'가 뜬다 (Esc로도 끈다).
+
+  펌웨어가 내는 줄 (config.h 의 LOG_RAW = true):
+      r,t_ms,ax,ay,az,step,cadence                샘플마다
+      f,t_ms,fi,규칙성,총파워,후보,동결,소리         판정마다(약 1초). STAGE 3부터
+  펌웨어로 보내는 명령: v,<0~100> 소리 크기 · b 시험 소리 · s 소리 끄기 · k,<0|1> 버튼으로 소리 켜기·끄기
+
+  업로드하기 전에는 '연결 끊기'를 누른다 — 포트는 한 프로그램만 쓸 수 있다.
+-->
+<style>
+  :root {
+    --bg: #ffffff; --ink: #151816; --ink2: #454b47; --ink3: #7b827d;
+    --line: #dfe3e0; --panel: #f4f6f4;
+    --green: #00a651; --green-ink: #0b7a3d; --green-soft: #e6f6ec;
+    --amber: #a85a00; --amber-soft: #fcf0e1; --red: #c0392b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101211; --ink: #e9ecea; --ink2: #b6bcb8; --ink3: #7f8682;
+      --line: #2a2f2c; --panel: #191c1a;
+      --green: #35cf85; --green-ink: #4fdc96; --green-soft: #13281b;
+      --amber: #f0a44c; --amber-soft: #2d2012; --red: #e0503f;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 -apple-system, "Apple SD Gothic Neo", sans-serif; }
+  main { max-width: 960px; margin: 0 auto; padding: 20px 16px 48px; display: grid; gap: 16px; }
+  .mono { font-family: ui-monospace, Menlo, monospace; }
+
+  header { display: flex; align-items: center; gap: 10px; }
+  h1 { font-size: 20px; margin: 0; margin-right: auto; }
+  .pill { font: 600 12px ui-monospace, Menlo, monospace; padding: 5px 10px; border-radius: 999px; background: var(--panel); color: var(--ink3); white-space: nowrap; }
+  .pill.on { color: var(--green-ink); }
+  .pill.err { color: var(--red); white-space: normal; }
+
+  button {
+    font: inherit; font-weight: 600; padding: 10px 16px; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer;
+  }
+  button.primary { background: var(--green); border-color: var(--green); color: #fff; }
+  button.stop { background: var(--red); border-color: var(--red); color: #fff; }
+  button.mark-on { background: var(--amber); border-color: var(--amber); color: #fff; }
+  button.small { font-size: 13px; padding: 6px 10px; }
+  button:disabled { opacity: .4; cursor: default; }
+  button:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+
+  .soundbar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; background: var(--red); color: #fff; font-weight: 700; }
+  .soundbar span { flex: 1; }
+  .soundbar button { background: #fff; border-color: #fff; color: var(--red); }
+
+  .tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: var(--panel); border-radius: 12px; padding: 4px; gap: 4px; }
+  .tabs button { border: 0; background: none; color: var(--ink3); font-size: 16px; padding: 12px 8px; }
+  .tabs button.active { background: var(--bg); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+
+  .card { background: var(--panel); border-radius: 14px; padding: 20px; min-width: 0; }
+  .card h2 { margin: 0 0 14px; font-size: 15px; color: var(--ink2); }
+  .small { color: var(--ink3); font-size: 13px; }
+
+  /* 기기 테스트 */
+  .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .dev { display: grid; gap: 14px; align-content: start; text-align: center; }
+  .lamp { padding: 34px 8px; border-radius: 12px; background: var(--bg); color: var(--ink3); font-size: 34px; font-weight: 800; }
+  .lamp.on { background: var(--amber); color: #fff; }
+  .volrow { display: flex; align-items: center; gap: 12px; }
+  .volrow input { flex: 1; min-width: 0; accent-color: var(--green); }
+  .volnum { font: 700 28px ui-monospace, Menlo, monospace; min-width: 84px; text-align: right; }
+  .xyz { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .xyz div { background: var(--bg); border-radius: 8px; padding: 8px 4px; }
+  .xyz b { display: block; font: 700 17px ui-monospace, Menlo, monospace; }
+  .xyz span { color: var(--ink3); font-size: 12px; }
+  .badge { padding: 10px; border-radius: 10px; background: var(--bg); font-weight: 700; }
+  .badge.ok { color: var(--green-ink); background: var(--green-soft); }
+  .badge.bad { color: var(--amber); background: var(--amber-soft); }
+  .bignum { font: 700 72px/1 ui-monospace, Menlo, monospace; letter-spacing: -0.03em; }
+  .wide { grid-column: 1 / -1; }
+  .gauges { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; text-align: left; }
+  .seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: var(--bg); border-radius: 10px; padding: 4px; gap: 4px; }
+  .seg button { border: 0; background: none; color: var(--ink3); padding: 10px 6px; }
+  .seg button.active { background: var(--green); color: #fff; }
+  .gauge { background: var(--bg); border-radius: 10px; padding: 12px; min-width: 0; }
+  .gauge .k { color: var(--ink3); font-size: 12px; }
+  .gauge .v { font: 700 24px ui-monospace, Menlo, monospace; }
+  .meter { position: relative; height: 6px; border-radius: 99px; background: var(--line); margin-top: 8px; }
+  .meter > div { height: 100%; width: 0; border-radius: 99px; background: var(--green); }
+  .meter > div.hot { background: var(--red); }
+  .meter > div.dim { background: var(--ink3); }
+  .meter > i { position: absolute; top: -3px; width: 2px; height: 12px; background: var(--ink2); }
+  details summary { color: var(--ink3); cursor: pointer; font-size: 13px; }
+  #chart { width: 100%; height: 200px; display: block; }
+  pre { background: var(--panel); border-radius: 10px; padding: 12px; font: 12px/1.5 ui-monospace, Menlo, monospace; height: 220px; overflow: auto; white-space: pre-wrap; margin: 8px 0 0; }
+
+  /* 기능 시험 */
+  .usestate { border-radius: 16px; padding: 48px 16px; text-align: center; background: var(--panel); color: var(--ink3); }
+  .usestate b { display: block; font-size: 40px; line-height: 1.2; }
+  .usestate span { display: block; margin-top: 8px; font-size: 16px; }
+  .usestate.walk { background: var(--green-soft); color: var(--green-ink); }
+  .usestate.still { background: var(--panel); color: var(--ink2); }
+  .usestate.ring { background: var(--red); color: #fff; }
+  .usestate.warn { background: var(--amber-soft); color: var(--amber); }
+  .count { float: right; font: 700 15px ui-monospace, Menlo, monospace; color: var(--ink); }
+
+  /* 데이터 기록 */
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .chips button { border-radius: 999px; padding: 7px 14px; font-size: 14px; color: var(--ink2); }
+  .chips button.active { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+  .chips .n { font: 600 11px ui-monospace, Menlo, monospace; margin-left: 6px; opacity: .7; }
+  .chips .spacer { flex: 1; }
+  .rec { display: grid; gap: 16px; }
+  .goal { text-align: center; font-size: 17px; font-weight: 700; }
+  .big { text-align: center; }
+  .big .num { font: 700 clamp(72px, 14vw, 120px)/1 ui-monospace, Menlo, monospace; letter-spacing: -0.04em; }
+  .big .label { color: var(--ink3); font-size: 14px; }
+  .bar { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+  .bar > div { height: 100%; width: 0; background: var(--green); transition: width .2s; }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .stat { background: var(--bg); border-radius: 8px; padding: 10px; min-width: 0; text-align: center; }
+  .stat .k { color: var(--ink3); font-size: 12px; }
+  .stat .v { font: 700 20px ui-monospace, Menlo, monospace; }
+  .controls { display: flex; gap: 8px; }
+  .controls button { flex: 1; padding: 16px; font-size: 17px; }
+  .marking { text-align: center; font-weight: 700; color: var(--amber); }
+  .warn { color: var(--red); font-size: 14px; text-align: center; }
+  .verdict { padding: 12px 14px; border-radius: 10px; background: var(--bg); border-left: 4px solid var(--ink3); }
+  .verdict.ok { border-left-color: var(--green); }
+  .verdict.bad { border-left-color: var(--amber); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .table-box { overflow-x: auto; }
+  th { text-align: left; color: var(--ink3); font-weight: 500; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td.mono { white-space: nowrap; }
+  .empty { color: var(--ink3); padding: 14px 8px; }
+
+  @media (max-width: 720px) {
+    .cards { grid-template-columns: minmax(0, 1fr); }
+    .gauges { grid-template-columns: minmax(0, 1fr); }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .usestate b { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>보행동결 자극기</h1>
+    <span id="status" class="pill">연결 안 됨</span>
+    <button id="connect" class="small">포트 연결</button>
+  </header>
+
+  <div id="unsupported" class="warn" hidden>이 브라우저는 USB 시리얼을 쓸 수 없습니다. Chrome으로 여세요.</div>
+
+  <div id="soundBar" class="soundbar" hidden>
+    <span id="soundWhy">소리 나는 중</span>
+    <button id="soundOff">끄기</button>
+  </div>
+
+  <nav class="tabs" id="tabs">
+    <button data-view="device">기기 테스트</button>
+    <button data-view="use">기능 시험</button>
+    <button data-view="record">데이터 기록</button>
+  </nav>
+
+  <!-- ───────── 기기 테스트 ───────── -->
+  <section id="view-device">
+    <div class="cards">
+      <div class="card dev">
+        <h2>택트스위치</h2>
+        <div id="lamp" class="lamp">안 눌림</div>
+      </div>
+
+      <div class="card dev">
+        <h2>부저</h2>
+        <div class="small" style="text-align:left">소리 크기</div>
+        <div class="volrow">
+          <input type="range" id="volDev" min="0" max="100" step="5" value="20" aria-label="소리 크기">
+          <span class="volnum" id="volDevText">20%</span>
+        </div>
+        <div class="small" style="text-align:left">박자 빠르기 (걸음/분)</div>
+        <div class="volrow">
+          <input type="range" id="bpm" min="40" max="140" step="5" value="90" aria-label="박자 빠르기">
+          <span class="volnum" id="bpmText">90</span>
+        </div>
+        <button id="beep" class="primary" disabled>시험 소리</button>
+      </div>
+
+      <div class="card dev">
+        <h2>진동</h2>
+        <button id="vibe" class="primary" disabled>시험 진동</button>
+      </div>
+
+      <div class="card dev">
+        <h2>센서</h2>
+        <div class="xyz">
+          <div><b id="sx">—</b><span>x (g)</span></div>
+          <div><b id="sy">—</b><span>y (g)</span></div>
+          <div><b id="sz">—</b><span>z (g)</span></div>
+          <div><b id="smag">—</b><span>크기 (g)</span></div>
+        </div>
+        <div id="sRate" class="badge">샘플레이트 —</div>
+      </div>
+
+      <div class="card dev">
+        <h2>걸음 세기</h2>
+        <div class="bignum" id="stepNum">0</div>
+        <div class="small">빠르기 <b id="stepCad">—</b> 걸음/분</div>
+        <button id="stepReset">0으로</button>
+      </div>
+
+      <div class="card dev">
+        <h2>판정 값</h2>
+        <div class="gauges">
+          <div class="gauge"><div class="k">걸음 규칙성</div><div class="v" id="gReg">—</div><div class="meter"><div id="mReg"></div><i style="left:41%"></i></div></div>
+          <div class="gauge"><div class="k">FI</div><div class="v" id="gFi">—</div><div class="meter"><div id="mFi"></div><i style="left:50%"></i></div></div>
+          <div class="gauge"><div class="k">움직임 세기</div><div class="v" id="gPw">—</div><div class="meter"><div id="mPw"></div><i style="left:12.5%"></i></div></div>
+        </div>
+        <div id="detBadge" class="badge">판정 값 없음</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── 기능 시험 ───────── -->
+  <section id="view-use" hidden>
+    <div style="display:grid;gap:16px">
+      <div id="useState" class="usestate"><b>기기를 연결하세요</b></div>
+      <div class="controls"><button id="useStart" class="primary" disabled>시작</button></div>
+
+      <div class="card">
+        <h2>최근 60초</h2>
+        <canvas id="chart" aria-label="최근 60초의 걸음 규칙성, FI, 동결 판정, 소리"></canvas>
+      </div>
+
+      <div class="card">
+        <h2>자극</h2>
+        <div class="seg" id="modeSeg">
+          <button data-mode="0">소리</button>
+          <button data-mode="1">진동</button>
+          <button data-mode="2">둘 다</button>
+        </div>
+        <div class="small" style="margin:14px 0 4px">소리 크기</div>
+        <div class="volrow">
+          <input type="range" id="volUse" min="0" max="100" step="5" value="20" aria-label="소리 크기">
+          <span class="volnum" id="volUseText">20%</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>오늘 울린 기록 <span class="count" id="useCount">0번</span></h2>
+        <div class="table-box">
+          <table>
+            <thead><tr><th>시각</th><th>길이</th><th>박자 (걸음/분)</th><th>켜진 방법</th></tr></thead>
+            <tbody id="useLog"><tr><td colspan="4" class="empty">아직 없습니다.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────── 데이터 기록 ───────── -->
+  <section id="view-record" hidden>
+    <div style="display:grid;gap:16px">
+      <div class="chips" id="recSub"></div>
+
+      <div class="card rec">
+        <div class="goal" id="recGoal"></div>
+        <div class="big">
+          <div class="num" id="r_big">0</div>
+          <div class="label" id="r_bigLabel">걸음</div>
+        </div>
+        <div class="bar"><div id="r_progress"></div></div>
+        <div class="stats">
+          <div class="stat"><div class="k">경과</div><div class="v" id="r_elapsed">0:00</div></div>
+          <div class="stat"><div class="k">빠르기</div><div class="v" id="r_cad">—</div></div>
+          <div class="stat"><div class="k">구간 표시</div><div class="v" id="r_marks">0</div></div>
+          <div class="stat"><div class="k">동결 판정</div><div class="v" id="r_events">—</div></div>
+        </div>
+        <div id="r_marking" class="marking" hidden></div>
+        <div class="controls">
+          <button id="r_start" class="primary" disabled>기록 시작</button>
+          <button id="r_mark" disabled>구간 표시 (M)</button>
+        </div>
+        <div id="r_noRaw" class="warn" hidden>센서 값이 안 들어옵니다</div>
+        <div id="r_verdict" class="verdict" hidden></div>
+      </div>
+
+      <div>
+        <div class="chips" style="margin-bottom:8px"><b>기록한 것</b><span class="spacer"></span><button id="folder" class="small">저장 폴더 선택</button></div>
+        <div class="table-box">
+          <table>
+            <thead><tr><th>상황</th><th>시작</th><th>길이</th><th>걸음</th><th>표시</th><th>결과</th><th>저장</th></tr></thead>
+            <tbody id="r_takes"><tr><td colspan="7" class="empty">아직 없습니다.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+// firmware/config.h 와 같은 기준값. 화면 표시에만 쓴다 — 판정은 기기가 한다
+const REG_T = 0.41, FI_T = 1.5, PW_MIN = 0.005;
+
+// ── 데이터 기록 상황 ─────────────────────────────────────
+// target: steps(걸음 수) / sec(시간) / marks(6초 이상 표시 구간 수)
+const RECORD = [
+  { key: "walk100", name: "100걸음", goal: "100걸음 걷고 정지", target: { steps: 100 }, mark: null,
+    verdict: (t) => { const ok = t.steps >= 95 && t.steps <= 105; return { ok, text: `${t.steps}걸음 → ${ok ? "통과" : "기준 밖"}` }; } },
+  { key: "stand", name: "서 있기", goal: "2분 서 있기", target: { sec: 120 }, mark: null,
+    verdict: (t) => ({ ok: t.steps <= 2, text: `세어진 걸음 ${t.steps}개` }) },
+  { key: "turn", name: "방향 전환", goal: "2분 · 도는 동안 M", target: { sec: 120 }, mark: "도는 중",
+    verdict: (t) => ({ ok: null, text: `걸음 ${t.steps}개 · 표시 ${t.marks.length}개` }) },
+  { key: "stairs", name: "계단", goal: "2분 · 오르는 동안 M", target: { sec: 120 }, mark: "오르는 중",
+    verdict: (t) => ({ ok: null, text: `걸음 ${t.steps}개 · 표시 ${t.marks.length}개` }) },
+  { key: "pickup", name: "물건 집기", goal: "2분 · 멈춘 동안 M", target: { sec: 120 }, mark: "멈춰 있음",
+    verdict: (t) => ({ ok: null, text: `걸음 ${t.steps}개 · 표시 ${t.marks.length}개` }) },
+  { key: "freeze", name: "동결 흉내", goal: "6초 이상 10번 · 떠는 동안 M", target: { marks: 10 }, mark: "떨고 있음",
+    verdict: (t) => {
+      const long = t.marks.filter((m) => m.end - m.start >= 6).length;
+      return { ok: long >= 10, text: `표시 ${t.marks.length}개 중 6초 이상 ${long}개` };
+    } },
+];
+
+// 판정 채점 — 동결 흉내 기록에 붙는다. 표시(M)한 구간이 정답이다.
+// 표시보다 2초 먼저 켜진 판정까지는 잡은 것으로 본다(M을 늦게 누르는 일이 많다).
+// 표시를 끈 뒤 1초까지도 같다(판정은 4초 창이 차야 나와서 떨림보다 늦다).
+const GRACE_BEFORE = 2000, GRACE_AFTER = 1000;
+function median(a) {
+  if (!a.length) return "—";
+  const s = [...a].sort((x, y) => x - y), k = s.length >> 1;
+  return (s.length % 2 ? s[k] : (s[k - 1] + s[k]) / 2).toFixed(1);
+}
+function scoreDetection(t) {
+  const ev = t.det.events.map((e) => ({ on: e.on, off: e.off ?? t.det.tEnd }));
+  const ms = t.marks.filter((m) => m.dStart != null && m.dEnd != null);
+  let hit = 0;
+  const lat = [];
+  for (const m of ms) {
+    const ov = ev.filter((e) => e.on <= m.dEnd + GRACE_AFTER && e.off >= m.dStart);
+    if (ov.length) { hit++; lat.push(Math.max(0, ov[0].on - m.dStart) / 1000); }
+  }
+  const fa = ev.filter((e) => !ms.some((m) => e.on >= m.dStart - GRACE_BEFORE && e.on <= m.dEnd + GRACE_AFTER)).length;
+  return `판정: 잡힘 ${hit}/${ms.length} · 걸린 시간 ${median(lat)}초 · 떨기 밖 ${fa}번`;
+}
+
+// ── 상태 ─────────────────────────────────────────────────
+let view = "device", recCase = RECORD[0];
+let port = null, reader = null;
+let rec = null;
+const takes = [];
+let dirHandle = null;
+let cadence = 0, lastRawAt = 0, rawCount = 0, rate = 0;
+let det = null, detAt = 0;
+const detHist = [];                // 기능 시험 그래프용 최근 판정
+let devSteps = 0, lastAcc = null;
+let btnDown = false;
+let soundOn = false, soundWhy = "";
+const useLog = [];                 // 기능 시험의 '오늘 울린 기록' {start, end, tempo, how}
+let useDirty = true;
+let wakeLock = null;
+
+if (!("serial" in navigator)) { $("unsupported").hidden = false; $("connect").disabled = true; }
+if (!("showDirectoryPicker" in window)) $("folder").hidden = true;
+
+// ── 탭 ───────────────────────────────────────────────────
+function renderTabs() {
+  for (const b of $("tabs").children) {
+    b.className = b.dataset.view === view ? "active" : "";
+    b.disabled = !!rec && b.dataset.view !== view;
+  }
+  for (const v of ["device", "use", "record"]) $("view-" + v).hidden = v !== view;
+}
+for (const b of $("tabs").children) b.onclick = (e) => {
+  e.currentTarget.blur();
+  if (rec || b.dataset.view === view) return;
+  view = b.dataset.view;
+  renderTabs();
+  if (useOn) setUse(false); else sendArm();
+};
+
+function renderRecSub() {
+  $("recSub").innerHTML = "";
+  for (const c of RECORD) {
+    const b = document.createElement("button");
+    const n = takes.filter((t) => t.key === c.key).length;
+    b.innerHTML = `${c.name}${n ? `<span class="n">${n}</span>` : ""}`;
+    b.className = c === recCase ? "active" : "";
+    b.disabled = !!rec && c !== recCase;
+    b.onclick = (e) => { e.currentTarget.blur(); recCase = c; $("r_verdict").hidden = true; renderRecSub(); };
+    $("recSub").appendChild(b);
+  }
+  $("recGoal").textContent = recCase.goal;
+  $("r_mark").hidden = !recCase.mark;
+  $("r_bigLabel").textContent = recCase.target.marks ? "6초 이상 표시" : "걸음";
+}
+
+// ── 기기로 보내는 명령 ───────────────────────────────────
+let sendChain = Promise.resolve();
+function send(line) {
+  sendChain = sendChain.then(async () => {
+    if (!port?.writable) return;
+    const w = port.writable.getWriter();
+    try { await w.write(new TextEncoder().encode(line + "\n")); }
+    catch (e) { log("보내기 실패: " + e.message); }
+    finally { w.releaseLock(); }
+  });
+  return sendChain;
+}
+
+// 소리 크기 — 기기는 켜질 때마다 20%로 돌아가므로, 연결할 때와 기기가 다시 켜질 때마다 다시 보낸다
+let volume = 20;
+try {
+  const saved = localStorage.getItem("fogcue-volume");
+  if (saved !== null && Number(saved) >= 0 && Number(saved) <= 100) volume = Number(saved);
+} catch (e) {}
+function showVolume() {
+  for (const id of ["volDev", "volUse"]) $(id).value = volume;
+  for (const id of ["volDevText", "volUseText"]) $(id).textContent = volume + "%";
+}
+const sendVolume = () => send("v," + volume);
+for (const id of ["volDev", "volUse"]) {
+  $(id).oninput = () => { volume = Number($(id).value); showVolume(); };
+  $(id).onchange = () => { try { localStorage.setItem("fogcue-volume", String(volume)); } catch (e) {} sendVolume(); };
+}
+showVolume();
+
+// 자극(소리·진동)은 기능 시험에서 시작을 눌렀을 때만 켠다. 다른 탭에서는 흔들어도 울리지 않는다
+let useOn = false;
+const sendArm = () => send("a," + (view === "use" && useOn ? 1 : 0));
+function setUse(on) {
+  useOn = on;
+  $("useStart").textContent = on ? "정지" : "시작";
+  $("useStart").className = on ? "stop" : "primary";
+  sendArm();
+}
+$("useStart").onclick = (e) => { e.currentTarget.blur(); setUse(!useOn); };
+function resync() { sendVolume(); sendArm(); send("m," + cueMode); }
+
+// 시험 소리 빠르기 — config.h CADENCE_MIN~MAX(40~140) 안에서 고른다
+let testBpm = 90;
+try {
+  const saved = localStorage.getItem("fogcue-bpm");
+  if (saved !== null && Number(saved) >= 40 && Number(saved) <= 140) testBpm = Number(saved);
+} catch (e) {}
+$("bpm").value = testBpm;
+$("bpmText").textContent = testBpm;
+$("bpm").oninput = () => { testBpm = Number($("bpm").value); $("bpmText").textContent = testBpm; };
+$("bpm").onchange = () => { try { localStorage.setItem("fogcue-bpm", String(testBpm)); } catch (e) {} };
+$("beep").onclick = (e) => { e.currentTarget.blur(); sendVolume(); send("b," + testBpm); };
+$("vibe").onclick = (e) => { e.currentTarget.blur(); send("z," + testBpm); };   // 빠르기는 부저 칸과 같은 값
+
+// 자극 방식 — 0 소리 · 1 진동 · 2 둘 다. 기기는 켜질 때마다 '둘 다'로 돌아가므로 연결할 때 다시 보낸다
+let cueMode = 2;
+try { const saved = localStorage.getItem("fogcue-mode"); if (["0", "1", "2"].includes(saved)) cueMode = Number(saved); } catch (e) {}
+function showMode() { for (const b of $("modeSeg").children) b.className = Number(b.dataset.mode) === cueMode ? "active" : ""; }
+for (const b of $("modeSeg").children) b.onclick = (e) => {
+  e.currentTarget.blur();
+  cueMode = Number(b.dataset.mode);
+  showMode();
+  try { localStorage.setItem("fogcue-mode", String(cueMode)); } catch (err) {}
+  send("m," + cueMode);
+};
+showMode();
+$("soundOff").onclick = (e) => { e.currentTarget.blur(); send("s"); };
+$("stepReset").onclick = (e) => { e.currentTarget.blur(); devSteps = 0; };
+
+// ── 시리얼 ───────────────────────────────────────────────
+function setStatus(text, kind) { const el = $("status"); el.textContent = text; el.className = "pill" + (kind ? " " + kind : ""); }
+
+function log(line) { console.log(line); }   // 기기가 보낸 글은 브라우저 개발자 도구 콘솔에서 본다
+
+function closeUseEvent() {
+  const open = useLog.find((e) => !e.end);
+  if (open) { open.end = new Date(); useDirty = true; }
+}
+
+function handleLine(line) {
+  if (!line) return;
+  if ((line.match(/�/g) || []).length >= 3) return;   // 부팅 ROM 메시지(다른 속도)
+
+  if (line.startsWith("r,")) {
+    const p = line.split(",");
+    if (p.length < 7) return;
+    rawCount++;
+    lastRawAt = performance.now();
+    const step = p[5] === "1";
+    const ax = Number(p[2]), ay = Number(p[3]), az = Number(p[4]);
+    lastAcc = [ax, ay, az, Math.sqrt(ax * ax + ay * ay + az * az)];
+    if (step) devSteps++;
+    cadence = Number(p[6]) || cadence;
+    if (rec) {
+      rec.rows.push(`${p[1]},${p[2]},${p[3]},${p[4]},${lastAcc[3].toFixed(4)},${p[5]},${p[6]},${rec.markOn ? 1 : 0},${rec.detLast}`);
+      rec.tFirst ??= Number(p[1]);
+      rec.tLast = Number(p[1]);
+      if (step) rec.steps++;
+    }
+    return;
+  }
+
+  if (line.startsWith("f,")) {
+    const p = line.split(",");
+    if (p.length < 8) return;
+    det = { t: Number(p[1]), fi: Number(p[2]), reg: Number(p[3]), pw: Number(p[4]),
+            cand: p[5] === "1", frozen: p[6] === "1", cue: p[7] === "1" };
+    detAt = performance.now();
+    detHist.push({ at: detAt, ...det });
+    while (detHist.length && detAt - detHist[0].at > 90000) detHist.shift();
+    if (!det.cue) { soundOn = false; closeUseEvent(); }        // 30초 안전장치로 꺼진 것도 여기서 안다
+    else if (!soundOn) { soundOn = true; soundWhy = det.frozen ? "auto" : "button"; }
+    if (rec) {
+      rec.detLast = p.slice(2, 8).join(",");
+      rec.detCount++;
+      if (det.frozen && !rec.frozenOn) rec.events.push({ on: det.t, off: null });
+      if (!det.frozen && rec.frozenOn) rec.events[rec.events.length - 1].off = det.t;
+      rec.frozenOn = det.frozen;
+    }
+    return;
+  }
+
+  log(line);
+  if (line.startsWith("[BTN ] 누름")) btnDown = true;
+  else if (line.startsWith("[BTN ] 뗌")) btnDown = false;
+  else if (line.startsWith("[CUE ]")) {
+    const manual = line.includes("수동");
+    soundOn = true; soundWhy = manual ? "button" : "auto";
+    const tm = line.match(/tempo=(\d+)/);
+    closeUseEvent();
+    useLog.push({ start: new Date(), end: null, tempo: tm ? Number(tm[1]) : null, how: manual ? "버튼" : "자동 감지" });
+    useDirty = true;
+  }
+  else if (line.startsWith("[TEST] 시험")) { soundOn = true; soundWhy = line.includes("진동") ? "vibtest" : "test"; }
+  else if (line.startsWith("[STOP]") || line.startsWith("[TEST] 끝")) { soundOn = false; closeUseEvent(); }
+  const s = line.match(/STAGE\s+(\d)/);
+  if (s) { soundOn = false; btnDown = false; closeUseEvent(); resync(); }   // 기기가 다시 켜졌다
+}
+
+async function readLoop() {
+  const decoder = new TextDecoderStream();
+  const closed = port.readable.pipeTo(decoder.writable).catch(() => {});
+  reader = decoder.readable.getReader();
+  let buf = "";
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += value;
+      let i;
+      while ((i = buf.indexOf("\n")) >= 0) { handleLine(buf.slice(0, i).trim()); buf = buf.slice(i + 1); }
+    }
+  } catch (e) { /* USB가 빠지면 여기로 */ }
+  try { reader.releaseLock(); } catch (e) {}
+  await closed;
+  try { await port.close(); } catch (e) {}
+  port = null; reader = null;
+  if (rec) stopRec();
+  soundOn = false; btnDown = false; closeUseEvent();
+  useOn = false; $("useStart").textContent = "시작"; $("useStart").className = "primary";
+  setStatus("연결 끊김", "err");
+  $("connect").textContent = "포트 연결";
+  for (const id of ["r_start", "beep", "vibe", "useStart"]) $(id).disabled = true;
+}
+
+$("connect").onclick = async (e) => {
+  e.currentTarget.blur();
+  if (port) {
+    // 끊기 전에 소리를 멈추고 자극을 끈다. 기기 전원을 다시 켜면 웹 없이 혼자 동작하는 상태로 돌아온다
+    await send("s"); await send("a,0");
+    try { await reader.cancel(); } catch (err) {}
+    return;
+  }
+  try {
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+  } catch (err) {
+    port = null;
+    if (err.name === "NotFoundError") return;
+    setStatus("포트 열기 실패 — 맥북 쪽 USB를 뽑았다 꽂으세요", "err");
+    log("포트 열기 실패: " + err.name + " " + err.message);
+    return;
+  }
+  setStatus("연결됨", "on");
+  $("connect").textContent = "연결 끊기";
+  for (const id of ["r_start", "beep", "vibe", "useStart"]) $(id).disabled = false;
+  readLoop();
+  setTimeout(resync, 1500);         // 포트를 열면 기기가 다시 켜질 수 있어 조금 기다렸다 보낸다
+};
+
+$("folder").onclick = async (e) => {
+  e.currentTarget.blur();
+  try {
+    dirHandle = await window.showDirectoryPicker({ id: "fogcue-raw", mode: "readwrite" });
+    $("folder").textContent = "저장 폴더: " + dirHandle.name;
+  } catch (err) { /* 취소 */ }
+};
+
+// ── 데이터 기록 ──────────────────────────────────────────
+async function startRec() {
+  if (!port || rec || view !== "record") return;
+  const c = recCase;
+  rec = { key: c.key, case: c, startedAt: new Date(), t0: performance.now(),
+          rows: [], steps: 0, marks: [], markOn: false, tFirst: null, tLast: null,
+          detLast: "nan,nan,nan,nan,nan,nan", detCount: 0, events: [], frozenOn: false };
+  $("r_start").textContent = "정지"; $("r_start").className = "stop";
+  $("r_mark").disabled = !c.mark;
+  $("r_verdict").hidden = true;
+  renderTabs(); renderRecSub();
+  try { wakeLock = await navigator.wakeLock?.request("screen"); } catch (e) {}
+}
+
+function elapsedSec() { return rec ? (performance.now() - rec.t0) / 1000 : 0; }
+
+// 표시 구간은 두 시계로 적는다. start/end는 시작부터 초(CSV 머리말용),
+// dStart/dEnd는 기기 millis — 판정 줄과 같은 시계라 채점은 이걸로 한다
+function toggleMark() {
+  if (!rec || !rec.case.mark) return;
+  const t = elapsedSec();
+  if (!rec.markOn) { rec.marks.push({ start: t, end: null, dStart: rec.tLast, dEnd: null }); rec.markOn = true; }
+  else { const m = rec.marks[rec.marks.length - 1]; m.end = t; m.dEnd = rec.tLast; rec.markOn = false; }
+}
+
+async function stopRec() {
+  if (!rec) return;
+  const r = rec; rec = null;
+  const dur = (performance.now() - r.t0) / 1000;
+  if (r.markOn) { const m = r.marks[r.marks.length - 1]; m.end = dur; m.dEnd = r.tLast; }
+  try { wakeLock?.release(); } catch (e) {}
+  wakeLock = null;
+
+  const n = r.rows.length;
+  const fs = n > 1 && r.tLast > r.tFirst ? (n - 1) * 1000 / (r.tLast - r.tFirst) : 0;
+  let gaps = 0, prev = null;
+  for (const row of r.rows) { const t = Number(row.split(",", 1)[0]); if (prev !== null && t - prev > 24) gaps++; prev = t; }
+
+  const take = { key: r.key, name: r.case.name, startedAt: r.startedAt, dur, steps: r.steps,
+                 marks: r.marks, samples: n, fs, gaps,
+                 det: r.detCount ? { events: r.events, tEnd: r.tLast } : null };
+  const base = r.case.verdict(take);
+  let extra = "";
+  if (take.det) extra = r.case.key === "freeze" ? " · " + scoreDetection(take) : ` · 동결 판정 ${take.det.events.length}번`;
+  take.verdict = { ok: base.ok, text: base.text + extra };
+  take.file = fileName(r.startedAt, r.key);
+  take.csv = buildCsv(r, take);
+  takes.push(take);
+  await save(take);
+
+  $("r_start").textContent = "기록 시작"; $("r_start").className = "primary";
+  $("r_start").disabled = !port;
+  $("r_mark").disabled = true; $("r_mark").className = "";
+  const v = $("r_verdict");
+  v.className = "verdict" + (take.verdict.ok === true ? " ok" : take.verdict.ok === false ? " bad" : "");
+  v.textContent = take.verdict.text;
+  v.hidden = false;
+  renderTabs(); renderRecSub(); renderTakes();
+}
+
+function pad(x, n = 2) { return String(x).padStart(n, "0"); }
+function hms(d) { return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
+function fmt(sec) { return `${Math.floor(sec / 60)}:${pad(Math.floor(sec % 60))}`; }
+function fileName(d, key) {
+  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}_${key}.csv`;
+}
+function isoLocal(d) {
+  const off = -d.getTimezoneOffset(), sign = off >= 0 ? "+" : "-";
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${hms(d)}${sign}${pad(Math.floor(Math.abs(off) / 60))}:${pad(Math.abs(off) % 60)}`;
+}
+
+function buildCsv(r, take) {
+  const marks = take.marks.map((m) => `${m.start.toFixed(2)}-${m.end.toFixed(2)}`).join(" ") || "-";
+  const events = take.det ? (take.det.events.map((e) => `${e.on}-${e.off ?? "끝"}`).join(" ") || "-") : "판정 값 없음";
+  return [
+    "# fogcue walk recording",
+    `# case: ${take.key} (${take.name})`,
+    `# started: ${isoLocal(r.startedAt)}`,
+    `# duration_s: ${take.dur.toFixed(2)}`,
+    `# steps: ${take.steps}`,
+    `# samples: ${take.samples}`,
+    `# fs_measured_hz: ${take.fs.toFixed(3)}  (fs_nominal_hz: 62.5)`,
+    `# gaps_over_24ms: ${take.gaps}`,
+    `# marks_s: ${marks}  (기록 시작부터 초. mark 열은 '${r.case.mark ?? "-"}' 구간)`,
+    `# frozen_events_ms: ${events}  (기기 millis. 동결 판정이 켜지고 꺼진 시각)`,
+    `# result: ${take.verdict.text}`,
+    "# columns: t_ms=기기 millis, ax/ay/az/mag=g, step=이 샘플에서 걸음 검출, cadence=걸음/분, mark=표시 구간,",
+    "#          fi/reg/power/cand/frozen/cue=그 시점까지 기기가 낸 마지막 판정 (약 1초마다 갱신, 판정 전에는 nan)",
+    "t_ms,ax,ay,az,mag,step,cadence,mark,fi,reg,power,cand,frozen,cue",
+    ...r.rows,
+  ].join("\n") + "\n";
+}
+
+async function save(take) {
+  if (dirHandle) {
+    try {
+      const fh = await dirHandle.getFileHandle(take.file, { create: true });
+      const w = await fh.createWritable();
+      await w.write(take.csv); await w.close();
+      take.saved = dirHandle.name + "/";
+      return;
+    } catch (e) { take.saved = "폴더 저장 실패 → 내려받기"; }
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([take.csv], { type: "text/csv" }));
+  a.download = take.file; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  take.saved ??= "내려받기 폴더";
+}
+
+function renderTakes() {
+  const tb = $("r_takes");
+  if (!takes.length) return;
+  tb.innerHTML = "";
+  [...takes].reverse().forEach((t) => {
+    const tr = document.createElement("tr");
+    const cls = t.verdict.ok === true ? "color:var(--green-ink)" : t.verdict.ok === false ? "color:var(--amber)" : "";
+    tr.innerHTML = `<td>${t.name}</td><td class="mono">${hms(t.startedAt)}</td><td class="mono">${fmt(t.dur)}</td>
+      <td class="mono">${t.steps}</td><td class="mono">${t.marks.length}</td><td style="${cls}">${t.verdict.text}</td>
+      <td class="mono" title="${t.file}">${t.saved}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+$("r_start").onclick = (e) => { e.currentTarget.blur(); rec ? stopRec() : startRec(); };
+$("r_mark").onclick = (e) => { e.currentTarget.blur(); toggleMark(); };
+document.addEventListener("keydown", (e) => {
+  if (e.repeat) return;
+  if (e.code === "Escape") { send("s"); return; }
+  if (view !== "record") return;
+  if (e.code === "Space") { e.preventDefault(); rec ? stopRec() : startRec(); }
+  else if (e.code === "KeyM") { e.preventDefault(); toggleMark(); }
+});
+
+// ── 화면 갱신 ────────────────────────────────────────────
+setInterval(() => { rate = rawCount; rawCount = 0; }, 1000);
+
+function renderDevice() {
+  $("lamp").textContent = !port ? "연결 안 됨" : btnDown ? "눌림" : "안 눌림";
+  $("lamp").className = "lamp" + (btnDown ? " on" : "");
+  const fresh = lastAcc && performance.now() - lastRawAt < 2000;
+  ["sx", "sy", "sz", "smag"].forEach((id, i) => { $(id).textContent = fresh ? lastAcc[i].toFixed(2) : "—"; });
+  const el = $("sRate");
+  if (!fresh) { el.className = "badge"; el.textContent = port ? "센서 값 없음" : "연결 안 됨"; }
+  else {
+    const ok = rate >= 61.9 && rate <= 63.1;
+    el.className = "badge " + (ok ? "ok" : "bad");
+    el.textContent = `${rate} Hz · ${ok ? "정상" : "확인 필요"}`;
+  }
+  $("stepNum").textContent = devSteps;
+  $("stepCad").textContent = cadence || "—";
+
+  const dfresh = det && performance.now() - detAt < 3000;
+  gauge("Reg", dfresh ? det.reg : null, 1, (v) => v < REG_T, "hot", 2);
+  gauge("Fi", dfresh ? det.fi : null, 3, (v) => v >= FI_T, "hot", 2);
+  gauge("Pw", dfresh ? det.pw : null, 0.04, (v) => v < PW_MIN, "dim", 4);
+  const b = $("detBadge");
+  if (!dfresh) { b.className = "badge"; b.textContent = port ? "판정 값 없음" : "연결 안 됨"; }
+  else if (det.frozen) { b.className = "badge bad"; b.textContent = "동결 판정"; }
+  else if (det.cand) { b.className = "badge bad"; b.textContent = "동결 의심"; }
+  else if (det.pw < PW_MIN) { b.className = "badge"; b.textContent = "가만히 있음"; }
+  else { b.className = "badge ok"; b.textContent = "걷기"; }
+}
+
+function gauge(id, v, max, flag, flagCls, digits) {
+  $("g" + id).textContent = v == null ? "—" : v.toFixed(digits);
+  const m = $("m" + id);
+  m.style.width = v == null ? "0" : Math.min(100, Math.max(0, v / max * 100)) + "%";
+  m.className = v != null && flag(v) ? flagCls : "";
+}
+
+function renderUse(now) {
+  const el = $("useState");
+  const fresh = det && now - detAt < 3000;
+  const ringing = useLog.find((e) => !e.end);
+  let big, small = "", cls;
+  if (!port) { big = "기기를 연결하세요"; cls = ""; }
+  else if (!fresh) { big = "판정 값 없음"; cls = "warn"; }
+  else if (det.cue) { big = "박자 주는 중"; small = ringing?.tempo ? `${ringing.tempo} 걸음/분 · ${ringing.how}` : ""; cls = "ring"; }
+  else if (det.frozen) { big = "동결 감지"; small = "30초 지나 멈춤"; cls = "ring"; }
+  else if (det.pw < PW_MIN) { big = "멈춰 있음"; cls = "still"; }
+  else { big = "걷는 중"; small = cadence ? `${cadence} 걸음/분` : ""; cls = "walk"; }
+  if (port && fresh && !useOn) small = small ? `${small} · 시작 전` : "시작 전";
+  el.className = "usestate " + cls;
+  el.innerHTML = `<b>${big}</b>${small ? `<span>${small}</span>` : ""}`;
+
+  drawChart(now);
+  $("useCount").textContent = useLog.length + "번";
+  if (useDirty || ringing) {
+    useDirty = false;
+    const tb = $("useLog");
+    if (useLog.length) {
+      tb.innerHTML = [...useLog].reverse().map((e) => {
+        const len = e.end ? `${Math.round((e.end - e.start) / 1000)}초` : "울리는 중";
+        return `<tr><td class="mono">${hms(e.start)}</td><td class="mono">${len}</td><td class="mono">${e.tempo ?? "—"}</td><td>${e.how}</td></tr>`;
+      }).join("");
+    }
+  }
+}
+
+// 최근 60초. 위 두 칸은 규칙성(0~1)과 FI(0~3), 아래 두 줄은 동결 판정과 소리
+function drawChart(now) {
+  const cv = $("chart"), dpr = window.devicePixelRatio || 1;
+  const w = cv.clientWidth, h = cv.clientHeight;
+  if (!w || !h) return;
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  }
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  const css = getComputedStyle(document.documentElement);
+  const col = (n) => css.getPropertyValue(n).trim();
+  const SPAN = 60000, L = 48, R = 8, P = (h - 58) / 2, W = w - L - R;
+  const X = (at) => L + (1 - (now - at) / SPAN) * W;
+  const pts = detHist.filter((d) => now - d.at <= SPAN);
+  ctx.font = "11px -apple-system, 'Apple SD Gothic Neo', sans-serif";
+  ctx.textBaseline = "middle";
+
+  function panel(y0, key, max, thr, name) {
+    ctx.fillStyle = col("--bg"); ctx.fillRect(L, y0, W, P);
+    ctx.fillStyle = col("--ink3"); ctx.textAlign = "left"; ctx.fillText(name, 2, y0 + P / 2);
+    const ty = y0 + P - (thr / max) * P;
+    ctx.setLineDash([4, 4]); ctx.strokeStyle = col("--ink3"); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(L, ty); ctx.lineTo(L + W, ty); ctx.stroke(); ctx.setLineDash([]);
+    ctx.textAlign = "right"; ctx.fillText(String(thr), L + W - 3, ty - 7);
+    if (!pts.length) return;
+    ctx.strokeStyle = col("--ink"); ctx.lineWidth = 1.6; ctx.beginPath();
+    pts.forEach((d, i) => {
+      const v = Math.min(max, Math.max(0, d[key]));
+      const px = X(d.at), py = y0 + P - (v / max) * P;
+      i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    });
+    ctx.stroke();
+  }
+
+  function track(y, name, on, color) {
+    ctx.fillStyle = col("--bg"); ctx.fillRect(L, y, W, 8);
+    ctx.fillStyle = color;
+    pts.forEach((d, i) => {
+      if (!on(d)) return;
+      const a = Math.max(L, X(i ? pts[i - 1].at : d.at - 1000)), b = X(d.at);
+      ctx.fillRect(a, y, Math.max(1, b - a), 8);
+    });
+    ctx.fillStyle = col("--ink3"); ctx.textAlign = "left"; ctx.fillText(name, 2, y + 4);
+  }
+
+  panel(0, "reg", 1, REG_T, "규칙성");
+  panel(P + 8, "fi", 3, FI_T, "FI");
+  track(2 * P + 18, "판정", (d) => d.frozen, col("--red"));
+  track(2 * P + 32, "소리", (d) => d.cue, col("--amber"));
+  ctx.fillStyle = col("--ink3"); ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "left"; ctx.fillText("60초 전", L, h - 2);
+  ctx.textAlign = "right"; ctx.fillText("지금", L + W, h - 2);
+  if (!pts.length) { ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("판정 값 없음", L + W / 2, P / 2); }
+}
+
+function renderRecord(now) {
+  const c = recCase, sec = elapsedSec();
+  if (rec) {
+    const long = rec.marks.filter((m) => (m.end ?? sec) - m.start >= 6).length;
+    $("r_big").textContent = c.target.marks ? long : rec.steps;
+    const p = c.target.steps ? rec.steps / c.target.steps : c.target.sec ? sec / c.target.sec : long / c.target.marks;
+    $("r_progress").style.width = Math.min(100, p * 100) + "%";
+    $("r_marking").hidden = !rec.markOn;
+    if (rec.markOn) $("r_marking").textContent = `● ${c.mark} — ${(sec - rec.marks[rec.marks.length - 1].start).toFixed(1)}초`;
+    $("r_mark").className = rec.markOn ? "mark-on" : "";
+    $("r_noRaw").hidden = !(sec > 2 && now - lastRawAt > 2000);
+  } else {
+    $("r_marking").hidden = true;
+    $("r_noRaw").hidden = true;
+  }
+  $("r_elapsed").textContent = fmt(sec);
+  $("r_cad").textContent = cadence || "—";
+  $("r_marks").textContent = rec ? rec.marks.length : 0;
+  $("r_events").textContent = rec && rec.detCount ? rec.events.length : "—";
+}
+
+const SOUND_WHY = { button: "버튼으로 켠 박자", auto: "동결 감지 · 박자", test: "시험 소리", vibtest: "시험 진동" };
+
+function render() {
+  const now = performance.now();
+  $("soundBar").hidden = !(soundOn && port);
+  if (soundOn) $("soundWhy").textContent = SOUND_WHY[soundWhy] ?? "소리 나는 중";
+  if (view === "device") renderDevice();
+  else if (view === "use") renderUse(now);
+  else renderRecord(now);
+  requestAnimationFrame(render);
+}
+
+// 탭을 닫을 때도 소리를 멈추고 자극을 끈다 — 닫히는 중이라 못 보낼 수도 있다
+window.addEventListener("beforeunload", () => { if (port) { send("s"); send("a,0"); } });
+
+renderTabs(); renderRecSub(); render();
+</script>
+</body>
+</html>

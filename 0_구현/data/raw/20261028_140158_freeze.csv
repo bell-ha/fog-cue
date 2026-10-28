@@ -1,0 +1,11 @@
+# fogcue walk recording
+# case: freeze (동결 흉내 · 제자리 떨림)
+# started: 2026-10-28T14:01:58+09:00
+# duration_s: 5.60
+# steps: 0
+# samples: 0
+# fs_measured_hz: 0.000  (fs_nominal_hz: 62.5)
+# gaps_over_24ms: 0
+# marks_s: -  (기록 시작부터 초. mark 열은 '떨고 있음' 구간)
+# columns: t_ms=기기 millis, ax/ay/az/mag=g, step=이 샘플에서 걸음 검출, cadence=걸음/분, mark=표시 구간
+t_ms,ax,ay,az,mag,step,cadence,mark
