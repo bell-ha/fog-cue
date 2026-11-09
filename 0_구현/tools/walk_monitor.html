@@ -103,6 +103,12 @@
   .st.warn::before { background: var(--amber); }
   .st.wait::before { background: var(--amber); animation: blink 1s steps(1) infinite; }
   .st:empty { display: none; }
+  .sig { font-size: 13px; color: var(--ink2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .sig b { font-weight: 600; }
+  @media (max-width: 600px) { .sig .n { display: none; } }
+  .sig.good b { color: var(--green); }
+  .sig.weak b { color: var(--amber); }
+  .sig.bad b { color: var(--red, #d93025); }
   @keyframes blink { 50% { opacity: .2; } }
 
   /* 박자 울리는 동안 — 기기 진단 · 측정 탭에서만. 실시간 · 앱 탭은 화면 안의 '박자 끄기'가 대신한다 */
@@ -233,6 +239,8 @@
   /* 앱 — 휴대폰 화면은 페이지 테마와 상관없이 밝게 둔다 */
   .app-ctl { display: flex; justify-content: center; gap: 8px; }
   .app-ctl button { min-width: 140px; }
+  .app-ctl .app-reset { min-width: 0; }
+  .app-demo { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink2); margin-left: 4px; cursor: pointer; }
   .phones { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; }
   .ph-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
   .ph-who { font-size: 14px; color: var(--ink3); }
@@ -312,6 +320,7 @@
   <header>
     <h1>보행동결 자극기</h1>
     <span id="status" class="st">연결 안 됨</span>
+    <span id="sig" class="sig" hidden title="벨트가 받는 Wi-Fi 세기 (1초마다)"></span>
     <div class="hd-ctl">
       <div class="via" id="via">
         <button data-via="usb">USB</button>
@@ -467,6 +476,8 @@
       <div class="app-ctl">
         <button id="appStart" class="primary" disabled>시작</button>
         <button id="appCueOff" class="stop" hidden>박자 끄기</button>
+        <button id="appReset" class="app-reset">초기화</button>
+        <label class="app-demo" title="자동 감지를 쉬고, 벨트 버튼을 누르면 굳은 것처럼 걷던 빠르기로 박자가 울린다. 다시 누르면 풀린다. 발표 · 영상용"><input type="checkbox" id="demoMode"> 시연 모드</label>
       </div>
       <div class="phones">
         <div class="ph-col">
@@ -698,7 +709,11 @@ function showUse() {
 }
 function setUse(on) { useOn = on; showUse(); sendArm(); }
 for (const id of ["useStart", "appStart"]) $(id).onclick = (e) => { e.currentTarget.blur(); setUse(!useOn); };
-function resync() { sendVolume(); sendArm(); send("m," + cueMode); }
+function resync() { sendVolume(); sendArm(); send("m," + cueMode); send("d," + (demoOn ? 1 : 0)); }
+
+// 시연 모드 — 벨트 버튼이 감지 대신 (벨트 config.h). 이 화면이 기억하고, 연결할 때마다 벨트에 보낸다
+let demoOn = false;
+try { demoOn = localStorage.getItem("fogcue-demo") === "1"; } catch (e) {}
 
 // 시험 소리 빠르기 — config.h CADENCE_MIN~MAX(40~140) 안에서 고른다
 let testBpm = 90;
@@ -743,6 +758,19 @@ function setStatus(text, kind, msg) {
 }
 function showConnect(on) { $("connect").textContent = on ? "끊기" : "연결"; $("connect").className = on ? "" : "primary"; }
 
+// 벨트가 받는 Wi-Fi 세기. -60보다 세면 좋음, -75보다 약하면 끊기기 시작한다
+let sigAt = 0;
+function showSignal(dbm) {
+  if (!Number.isFinite(dbm) || dbm === 0) return;
+  sigAt = performance.now();
+  const [cls, word] = dbm >= -60 ? ["good", "좋음"] : dbm >= -75 ? ["weak", "보통"] : ["bad", "약함"];
+  const el = $("sig");
+  el.className = "sig " + cls;
+  el.innerHTML = `신호 <b>${word}</b><span class="n"> ${dbm} dBm</span>`;
+  el.hidden = false;
+}
+setInterval(() => { if (sigAt && performance.now() - sigAt > 3000) { $("sig").hidden = true; sigAt = 0; } }, 1000);
+
 function log(line) { console.log(line); }   // 기기가 보낸 글은 브라우저 개발자 도구 콘솔에서 본다
 
 function closeUseEvent() {
@@ -772,6 +800,9 @@ function handleLine(line) {
     }
     return;
   }
+
+  // 신호 세기 (Wi-Fi일 때만 온다)  w,<dBm>
+  if (line.startsWith("w,")) { showSignal(Number(line.slice(2))); return; }
 
   if (line.startsWith("e,")) {
     const p = line.split(",");
@@ -1055,6 +1086,29 @@ function summaryBanner() {
   banner("phG", first, [rest, `벨트를 찬 시간 ${worn}`].filter(Boolean).join(" · "));
 }
 $("gPreview").onclick = () => summaryBanner();
+
+// 초기화 — 두 휴대폰의 기록 · 횟수 · 알림을 비운다 (시연을 처음부터 다시 할 때). 울리는 중인 박자는 그대로 둔다
+$("demoMode").checked = demoOn;
+$("demoMode").onchange = (e) => {
+  demoOn = e.currentTarget.checked;
+  try { localStorage.setItem("fogcue-demo", demoOn ? "1" : "0"); } catch (err) {}
+  if (linked) send("d," + (demoOn ? 1 : 0));
+};
+
+$("appReset").onclick = (e) => {
+  e.currentTarget.blur();
+  if (appLog.length && !confirm("두 휴대폰의 기록과 횟수를 지울까요?")) return;
+  const open = appLog.find((x) => !x.end);
+  appLog.length = 0;
+  if (open) appLog.push(open);
+  stuckSince = null;
+  wornMs = 0;
+  for (const id of ["phW", "phG"]) {
+    $(id).querySelector(".ph-banner").classList.remove("show");
+    showPage($(id), "home");
+  }
+  renderApp();
+};
 // 알림 버튼 — '지금 상태 보기'는 보호자 홈으로
 for (const id of ["phW", "phG"]) $(id).querySelector(".ph-act").onclick = (e) => {
   e.stopPropagation();

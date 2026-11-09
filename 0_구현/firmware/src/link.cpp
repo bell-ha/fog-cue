@@ -2,7 +2,9 @@
 
 TeeOut out;
 
-#if !LINK_WIFI
+#if LINK_BLE
+// 블루투스는 link_ble.cpp
+#elif !LINK_WIFI
 // Wi-Fi 설정이 없으면 USB만 쓴다
 namespace wlink {
   void begin() { Serial.println("[WIFI] wifi_secret.h 없음 — USB만 쓴다"); }
@@ -14,6 +16,8 @@ namespace wlink {
 
 #include <WiFi.h>
 #include <ESPmDNS.h>
+#include <lwip/sockets.h>
+#include <errno.h>
 
 namespace {
   constexpr int    MAX_VIEWERS = 4;
@@ -28,8 +32,13 @@ namespace {
   struct Cmd { char s[24]; };
 
   WiFiServer server(80);
-  WiFiClient viewers[MAX_VIEWERS];
+  // 화면 하나. 못 보낸 줄은 pend에 쌓아 두고 다음 차례에 이어 보낸다.
+  // WiFiClient::write는 신호가 약하면 최대 10초를 기다린다 — 그동안 명령도 못 받고 다른 화면도 멈춘다.
+  // 그래서 소켓에 기다리지 않고(MSG_DONTWAIT) 들어가는 만큼만 넣는다
+  struct Viewer { WiFiClient c; String pend; uint32_t since = 0; };
+  Viewer viewers[MAX_VIEWERS];
   volatile int n_viewers = 0;
+  constexpr size_t PEND_MAX = 24000;    // 약 7초 분량. 이만큼 밀리면 화면이 사라진 것으로 보고 끊는다
 
   // 버퍼에서 '완성된 줄'만 꺼내 SSE 꼴(data: 줄\n\n)로 만든다
   String takeLines() {
@@ -82,16 +91,21 @@ namespace {
     String path = (a > 0 && b > a) ? first.substring(a + 1, b) : "/";
 
     if (path.startsWith("/events")) {
-      for (auto& v : viewers) {
-        if (v && v.connected()) continue;
-        v = c;
-        v.print("HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-cache\r\n"
-                "Access-Control-Allow-Origin: *\r\nConnection: keep-alive\r\n\r\n");
-        v.print("data: hello\n\n");
-        Serial.println("[WIFI] 화면 붙음");
-        return;
+      // 빈 자리가 없으면 가장 오래된 화면을 내보낸다.
+      // 멀리 갔다 오면 끊긴 화면이 '연결됨'으로 남아 자리를 차지한다 — 그러면 새로 붙을 수가 없었다
+      Viewer* slot = nullptr;
+      for (auto& v : viewers) if (!(v.c && v.c.connected())) { slot = &v; break; }
+      if (!slot) {
+        slot = &viewers[0];
+        for (auto& v : viewers) if (v.since < slot->since) slot = &v;
+        slot->c.stop();
       }
-      reply(c, "busy");
+      slot->c = c;
+      slot->c.setNoDelay(true);
+      slot->pend = "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-cache\r\n"
+                   "Access-Control-Allow-Origin: *\r\nConnection: keep-alive\r\n\r\ndata: hello\n\n";
+      slot->since = millis();
+      Serial.printf("[WIFI] 화면 붙음 · 신호 %d dBm\n", WiFi.RSSI());
     } else if (path.startsWith("/cmd?c=")) {
       Cmd m = {};
       String s = urlDecode(path.substring(7));
@@ -103,26 +117,54 @@ namespace {
     }
   }
 
+  // 붙을 Wi-Fi 목록. wifi_secret.h에 WIFI_SSID2를 적으면 두 번째도 쓴다 (예: 휴대폰 핫스팟).
+  // 안 붙으면 10초마다 다음 것으로 넘어간다 — 연구실에서는 공유기, 밖에서는 핫스팟에 알아서 붙는다
+  struct Net { const char* ssid; const char* pass; };
+  const Net nets[] = {
+    { WIFI_SSID, WIFI_PASS },
+#ifdef WIFI_SSID2
+    { WIFI_SSID2, WIFI_PASS2 },
+#endif
+  };
+  constexpr int N_NETS = sizeof(nets) / sizeof(nets[0]);
+
+  // 쌓인 것을 기다리지 않고 들어가는 만큼 보낸다
+  void flush(Viewer& v) {
+    if (!v.pend.length()) return;
+    int fd = v.c.fd();
+    if (fd < 0) { v.c.stop(); v.pend = ""; return; }
+    int r = send(fd, v.pend.c_str(), v.pend.length(), MSG_DONTWAIT);
+    if (r > 0) v.pend.remove(0, r);
+    else if (r < 0 && errno != EAGAIN && errno != EWOULDBLOCK) { v.c.stop(); v.pend = ""; }
+  }
+
   void task(void*) {
-    uint32_t last_try = 0, last_beat = 0;
+    uint32_t last_try = 0, last_beat = 0, last_rssi = 0;
     bool was_up = false, mdns = false;
+    int net = 0;
     WiFi.mode(WIFI_STA);
     WiFi.setSleep(false);                // 응답이 늦어지지 않게 (전류는 더 먹는다)
     WiFi.setAutoReconnect(true);
-    WiFi.begin(WIFI_SSID, WIFI_PASS);
+    WiFi.begin(nets[net].ssid, nets[net].pass);
+    WiFi.setTxPower(WIFI_POWER_19_5dBm);  // 가장 세게 (멀리서 쓰려고)
     last_try = millis();
 
     for (;;) {
       bool up = WiFi.status() == WL_CONNECTED;
       if (up && !was_up) {
-        Serial.printf("[WIFI] 연결됨 · %s · IP %s\n", WIFI_SSID, WiFi.localIP().toString().c_str());
+        Serial.printf("[WIFI] 연결됨 · %s · IP %s · 신호 %d dBm\n", WiFi.SSID().c_str(), WiFi.localIP().toString().c_str(), WiFi.RSSI());
         if (!mdns) mdns = MDNS.begin("fogcue");
         server.begin();
       }
       if (!up && was_up) Serial.println("[WIFI] 끊김");
       was_up = up;
       if (!up) {
-        if (millis() - last_try > 10000) { last_try = millis(); WiFi.disconnect(); WiFi.begin(WIFI_SSID, WIFI_PASS); }
+        if (millis() - last_try > 10000) {
+          last_try = millis();
+          net = (net + 1) % N_NETS;
+          WiFi.disconnect();
+          WiFi.begin(nets[net].ssid, nets[net].pass);
+        }
         // 화면이 없으니 버퍼는 비운다 — 다시 붙었을 때 옛날 값이 한꺼번에 가지 않게
         portENTER_CRITICAL(&ring_mux); tail = head; portEXIT_CRITICAL(&ring_mux);
         vTaskDelay(pdMS_TO_TICKS(100));
@@ -131,18 +173,23 @@ namespace {
 
       acceptClient();
 
-      int n = 0;
-      for (auto& v : viewers) if (v && v.connected()) n++;
-      n_viewers = n;
-
       String chunk = takeLines();
       if (millis() - last_beat > 5000) { last_beat = millis(); chunk += ": beat\n\n"; }
-      if (chunk.length()) {
-        for (auto& v : viewers) {
-          if (!v || !v.connected()) continue;
-          if (v.write((const uint8_t*)chunk.c_str(), chunk.length()) != chunk.length()) v.stop();
+      // 신호 세기 — 1초마다 한 줄. w,<dBm>. Wi-Fi 화면에만 간다 (USB 줄에는 없다)
+      if (millis() - last_rssi > 1000) { last_rssi = millis(); chunk += "data: w," + String(WiFi.RSSI()) + "\n\n"; }
+
+      int n = 0;
+      for (auto& v : viewers) {
+        if (!(v.c && v.c.connected())) { v.pend = ""; continue; }
+        n++;
+        v.pend += chunk;
+        flush(v);
+        if (v.pend.length() > PEND_MAX) {
+          Serial.println("[WIFI] 화면이 응답하지 않아 끊음");
+          v.c.stop(); v.pend = "";
         }
       }
+      n_viewers = n;
       vTaskDelay(pdMS_TO_TICKS(20));     // 20 ms마다 모아서 보낸다 (62.5 Hz 줄을 1~2줄씩)
     }
   }

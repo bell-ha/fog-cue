@@ -114,6 +114,11 @@ uint32_t test_until_ms = 0;
 // 웹 화면은 '기능 시험'에서 시작을 눌렀을 때만 켠다 — 기기 테스트나 기록 중에 흔들어서 울리지 않게.
 // 기기를 다시 켜면 켜진 상태로 돌아온다 — 웹 없이 혼자 쓸 때는 바로 동작해야 한다
 bool     cue_enabled = true;
+// 시연 모드 (config.h) — 자동 판정을 쉬고, 버튼으로 굳음 · 풀림을 낸다
+bool     demo_mode = false;
+
+// 걷던 빠르기 — 5초 전 값을 쓰고, 모르면 지금 값
+int demoTempo() { int c = cadenceBeforeFreeze(); return c ? c : gait.cadence(); }
 
 // ─── 상태 전환 ───────────────────────────────────────
 // 앱 화면용 줄 — 박자가 켜지고 꺼질 때 한 줄씩. 시험 소리·진동은 내지 않는다
@@ -151,6 +156,7 @@ void leaveCue(uint32_t now, StopReason why) {
 //   m,<0|1|2>   자극 방식 — 0 소리 · 1 진동 · 2 둘 다 (플래시에 남는다)
 //   a,<0|1>     자극 켜기·끄기. 0이면 판정·버튼은 알리기만 한다 (다시 켜면 1로 돌아온다)
 //   s           지금 나는 소리를 끈다 (판정·버튼·시험 소리 모두)
+//   d,<0|1>     시연 모드 — 버튼이 판정 대신 (config.h, 플래시에 남는다)
 // 설정 저장 (ESP32 플래시 NVS). 값이 바뀔 때만 쓴다 — 웹이 연결할 때마다 같은 값을 다시 보내도 플래시를 닳게 하지 않게
 Preferences prefs;
 void saveSetting(const char* key, int v) {
@@ -184,6 +190,14 @@ void handleCommand(const char* s, uint32_t now) {
   } else if (s[0] == 's' && s[1] == '\0') {
     test_until_ms = 0;
     leaveCue(now, STOP_WEB); // 동결 판정 중이면 상태는 남는다 — 판정이 풀리기 전에는 다시 켜지 않는다
+    if (demo_mode) state = WALKING;   // 시연 모드는 버튼이 판정이라, 끄면 풀린 것으로 본다
+  } else if (s[0] == 'd' && s[1] == ',') {
+    bool on = s[2] != '0';
+    if (on != demo_mode && state == FROZEN) { leaveCue(now, STOP_RELEASED); state = WALKING; }
+    if (on != demo_mode) freeze.reset();   // 판정을 처음부터 — 쉬는 동안 쌓인 값으로 바로 울리지 않게
+    demo_mode = on;
+    saveSetting("demo", demo_mode ? 1 : 0);
+    out.printf("[DEMO] 시연 모드 %s\n", demo_mode ? "켬" : "끔");
   } else if (s[0] == 'a' && s[1] == ',') {
     cue_enabled = s[2] != '0';
     if (!cue_enabled) { test_until_ms = 0; leaveCue(now, STOP_WEB); }
@@ -228,11 +242,13 @@ void setup() {
   prefs.begin("fogcue", false);
   cue.setVolume(prefs.getInt("vol", CUE_VOLUME_DEFAULT));
   cue.setMode(prefs.getInt("mode", CUE_MODE_DEFAULT));
+  demo_mode = prefs.getInt("demo", 0) == 1;
   wlink::begin();
 
   out.printf("보행동결 자극 시스템 · STAGE %d · %.1f Hz\n", STAGE, SAMPLE_HZ);
   out.printf("[VOL ] %d%%\n", cue.volume());
   out.printf("[MODE] %s\n", modeName(cue.mode()));
+  out.printf("[DEMO] 시연 모드 %s\n", demo_mode ? "켬" : "끔");
   // W2에서 이 값을 실측으로 확인할 것 — 1분간 샘플 수 ÷ 60 이 62.5 ± 1% 여야 한다.
 }
 
@@ -300,7 +316,9 @@ void loop() {
   // 소리가 안전장치(CUE_MAX_MS)로 멈춰도 상태는 FROZEN에 남는다.
   // 판정이 풀리기 전에는 다시 켜지 않는다 — 계속 울리는 기기가 되지 않게.
   if (judged) {
-    if (state != FROZEN && freeze.isFrozen()) {
+    if (demo_mode) {
+      // 시연 모드: 자동 판정은 쉰다. 상태는 버튼이 바꾼다 (아래)
+    } else if (state != FROZEN && freeze.isFrozen()) {
       state = FROZEN;                  // 자극이 꺼져 있어도 상태는 바뀐다 — 판정 줄로 웹이 본다
       if (cue_enabled) enterCue(now, false, cadenceBeforeFreeze());
     } else if (state == FROZEN && !freeze.isFrozen()) {
@@ -311,8 +329,9 @@ void loop() {
       // 마지막 열 = 도는 중이라 판정을 미루고 있는가
       out.printf("f,%lu,%.3f,%.3f,%.5f,%d,%d,%d,%d\n", (unsigned long)now,
                     freeze.freezeIndex(), freeze.regularity(), freeze.lastPower(),
-                    freeze.candidate() ? 1 : 0, freeze.isFrozen() ? 1 : 0, cue.active() ? 1 : 0,
-                    turn.holdOff(now) ? 1 : 0);
+                    demo_mode ? (state == FROZEN) : freeze.candidate(),
+                    demo_mode ? (state == FROZEN) : freeze.isFrozen(), cue.active() ? 1 : 0,
+                    (!demo_mode && turn.holdOff(now)) ? 1 : 0);
   }
 #endif
 
@@ -331,7 +350,13 @@ void loop() {
     stable = raw;
     out.println(stable == LOW ? "[BTN ] 누름" : "[BTN ] 뗌");
     if (stable == LOW && cue_enabled) {
-      if (cue.active()) leaveCue(now, STOP_BUTTON); else enterCue(now, true, cadenceBeforeFreeze());
+      if (demo_mode) {
+        // 시연 모드: 버튼 = 판정. 누르면 굳음, 다시 누르면 풀림
+        if (state == FROZEN) { leaveCue(now, STOP_RELEASED); state = WALKING; }
+        else { state = FROZEN; enterCue(now, false, demoTempo()); }
+      } else {
+        if (cue.active()) leaveCue(now, STOP_BUTTON); else enterCue(now, true, cadenceBeforeFreeze());
+      }
     }
   }
 #endif
