@@ -23,9 +23,11 @@ void FreezeDetector::reset() {
   candidate_ = false;
   hold_ = release_ = 0;
   frozen_ = false;
+  held_off_ = false;
 }
 
-bool FreezeDetector::push(float magnitude) {
+bool FreezeDetector::push(float magnitude, bool hold_off) {
+  hold_off_ = hold_off;
   buf_[head_] = magnitude;
   head_ = (head_ + 1) % FFT_N;
   if (filled_ < FFT_N) filled_++;
@@ -142,8 +144,10 @@ void FreezeDetector::compute() {
 
   // 한 번 넘었다고 켜지 않고, 한 번 내려갔다고 끄지 않는다.
   // 계단·방향 전환·물건을 집으려 멈추는 동작은 순간적으로 넘지만 이어지지 않는다.
+  // 몸이 도는 중이면 세지 않는다 — 그냥 돌아서는 걸음도 리듬이 무너져 보인다 (config.h '돌아서기')
+  held_off_ = !frozen_ && candidate_ && hold_off_;
   if (!frozen_) {
-    hold_ = candidate_ ? hold_ + 1 : 0;
+    hold_ = (candidate_ && !hold_off_) ? hold_ + 1 : 0;
     if (hold_ >= FI_HOLD_COUNT) { frozen_ = true; release_ = 0; }
   } else {
     release_ = candidate_ ? 0 : release_ + 1;

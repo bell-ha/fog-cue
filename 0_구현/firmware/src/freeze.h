@@ -20,13 +20,15 @@ public:
 
   // 샘플 하나를 버퍼에 넣는다. FFT_HOP마다 한 번 판정이 돌아간다.
   // 판정이 일어난 호출에서만 true를 돌려준다.
-  bool push(float magnitude);
+  // hold_off가 참이면(몸이 도는 중) 후보가 나와도 연속 횟수를 세지 않는다. 이미 켜진 동결은 그대로 둔다
+  bool push(float magnitude, bool hold_off = false);
 
   float freezeIndex() const { return fi_; }
   float regularity()  const { return reg_; }
   float lastPower()   const { return total_power_; }
   bool  candidate()   const { return candidate_; }   // 이번 창 하나만 본 판정
   bool  isFrozen()    const { return frozen_; }      // 연속 조건까지 거친 판정
+  bool  heldOff()     const { return held_off_; }    // 이번 판정을 도는 중이라 미뤘는가
 
   void reset();
 
@@ -43,6 +45,8 @@ private:
   int      hold_ = 0;          // 후보가 연속으로 나온 횟수
   int      release_ = 0;       // 동결 중에 후보가 아닌 창이 연속으로 나온 횟수
   bool     frozen_ = false;
+  bool     hold_off_ = false;  // push가 받은 값 — compute가 쓴다
+  bool     held_off_ = false;
 
   float    window_[FFT_N];     // Hanning. 미리 만들어 둔다
   float    win_norm_ = 1.0f;   // 창함수가 깎은 파워를 되돌리는 계수 (begin에서 계산)

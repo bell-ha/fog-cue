@@ -13,22 +13,30 @@
 //   STAGE 1  걸음만 센다 (시리얼로 확인)
 //   STAGE 2  멈추면 울린다              ← 최소 목표
 //   STAGE 3  동결만 골라낸다 (걸음 규칙성 + Freeze Index) · 택트스위치로 직접 켜고 끄기
-//   STAGE 4  기록 화면 · WiFi
+//            몸이 도는 동안은 판정을 미룬다 (자이로, src/turn.h)
+//   STAGE 4  부가 기능
+//   Wi-Fi는 단계와 상관없이 firmware/wifi_secret.h가 있으면 켜진다 (src/link.h)
 #define STAGE 3
 
 #include <Wire.h>
+#include <Preferences.h>
 #include "config.h"
 #include "src/gait.h"
 #include "src/freeze.h"
 #include "src/cue.h"
+#include "src/turn.h"
+#include "src/link.h"
 
 constexpr uint8_t MPU_ADDR = 0x68;
 
 GaitTracker     gait;
 FreezeDetector  freeze;
 CuePlayer       cue;
+TurnTracker     turn;
 
 enum State { WALKING, STOPPED, FROZEN };
+// 박자가 꺼진 이유 — 앱 화면용 e 줄에 실린다 (아래 '상태 전환' 참조)
+enum StopReason { STOP_RELEASED = 0, STOP_BUTTON = 1, STOP_TIMEOUT = 2, STOP_WEB = 3 };
 State state = WALKING;
 
 // 샘플 주기는 MPU가 정한다(아래 loop의 DATA_RDY 참조). 여기서 타이머를 돌리지 않는다.
@@ -43,30 +51,32 @@ void mpuWrite(uint8_t reg, uint8_t val) {
 
 void mpuBegin() {
   // 절전 해제를 빼먹으면 MPU는 자고 있고 값이 전부 0이다. 가장 흔한 첫 실수다.
-  mpuWrite(0x6B, 0x00);
+  // 클럭은 자이로 X축 PLL — 내부 RC 발진기(±1%)보다 정확하다. 자이로를 켜야 쓸 수 있다
+  mpuWrite(0x6B, 0x01);
   delay(100);
   // 순서 주의 — DLPF를 먼저 켜야 내부 출력이 1 kHz가 되고, 그 다음에야
   // SMPLRT_DIV가 1000/(1+DIV)로 동작한다. 반대로 하면 분주 기준이 8 kHz다.
   mpuWrite(0x1A, MPU_DLPF_CFG);     // DLPF ≈21 Hz. 샘플링 62.5 Hz의 나이퀴스트(31.25) 아래
   mpuWrite(0x19, MPU_SMPLRT_DIV);   // 1000/(1+15) = 62.5 Hz
   mpuWrite(0x1C, 0x00);   // 가속도 ±2 g. 보행 가속도는 대부분 여기 들어온다
-  // 자이로는 쓰지 않는다. 동결 판정에 필요 없고 전류만 먹는다
-  mpuWrite(0x6C, 0x07);   // 자이로 3축 standby
+  // 자이로 ±500 °/s. 돌아서는 것을 가려낼 때 쓴다 (src/turn.h). 전류는 약 3.6 mA 더 든다
+  mpuWrite(0x1B, 0x08);
+  mpuWrite(0x6C, 0x00);   // 모든 축 켜기
 }
 
-// 가속도 3축(g). 중력 성분은 뒤에서 각 모듈이 알아서 뺀다
+// 가속도 3축(g)과 자이로 3축(°/s). 중력 성분은 뒤에서 각 모듈이 알아서 뺀다
 // 크기만이 아니라 3축을 돌려주는 이유 — LOG_RAW로 원본을 남겨야 나중에 PC에서 다시 분석할 수 있다
-bool readAccel(float& x, float& y, float& z) {
+// 레지스터 0x3B부터 14바이트: 가속도 6 · 온도 2 · 자이로 6
+bool readImu(float* a, float* g) {
   Wire.beginTransmission(MPU_ADDR);
   Wire.write(0x3B);
   Wire.endTransmission(false);
-  Wire.requestFrom((int)MPU_ADDR, 6, true);
-  if (Wire.available() < 6) return false;
-  int16_t ax = (Wire.read() << 8) | Wire.read();
-  int16_t ay = (Wire.read() << 8) | Wire.read();
-  int16_t az = (Wire.read() << 8) | Wire.read();
+  Wire.requestFrom((int)MPU_ADDR, 14, true);
+  if (Wire.available() < 14) return false;
+  int16_t v[7];
+  for (int i = 0; i < 7; i++) v[i] = (Wire.read() << 8) | Wire.read();
   const float LSB = 16384.0f;   // ±2 g
-  x = ax / LSB; y = ay / LSB; z = az / LSB;
+  for (int k = 0; k < 3; k++) { a[k] = v[k] / LSB; g[k] = v[4 + k] / GYRO_LSB; }
   return true;
 }
 
@@ -106,59 +116,78 @@ uint32_t test_until_ms = 0;
 bool     cue_enabled = true;
 
 // ─── 상태 전환 ───────────────────────────────────────
+// 앱 화면용 줄 — 박자가 켜지고 꺼질 때 한 줄씩. 시험 소리·진동은 내지 않는다
+//   e,<t_ms>,1,<템포>,<버튼이면 1>
+//   e,<t_ms>,0,<꺼진 이유>        이유: 0 판정 풀림 · 1 버튼 · 2 30초 자동 정지 · 3 웹에서 끔
+bool real_cue = false;    // 지금 나는 박자가 판정·버튼으로 켠 것인지 (시험이면 false)
+
 void enterCue(uint32_t now, bool manual, int cadence_bpm) {
   // 시험 소리가 울리는 중에 진짜 판정이 나면 시험을 접고 판정 쪽 템포로 다시 시작한다
   if (test_until_ms) { cue.stop(); test_until_ms = 0; }
   cue.start(cadence_bpm, now);
   logEvent(now, cue.tempo(), manual);
-  Serial.printf("[CUE ] t=%lus tempo=%d%s\n",
+  real_cue = true;
+  out.printf("[CUE ] t=%lus tempo=%d%s\n",
                 now / 1000, cue.tempo(), manual ? " (수동)" : "");
+  out.printf("e,%lu,1,%d,%d\n", (unsigned long)now, cue.tempo(), manual ? 1 : 0);
 }
 
-void leaveCue(uint32_t now) {
+void leaveCue(uint32_t now, StopReason why) {
   if (cue.active()) {
     cue.stop();
-    Serial.printf("[STOP] t=%lus\n", now / 1000);
+    out.printf("[STOP] t=%lus\n", now / 1000);
+  }
+  if (real_cue) {
+    real_cue = false;
+    out.printf("e,%lu,0,%d\n", (unsigned long)now, (int)why);
   }
 }
 
 // ─── 웹 화면에서 오는 명령 ───────────────────────────
-//   v,<0~100>   소리 크기(%)
+//   v,<0~100>   소리 크기(%) (플래시에 남는다)
 //   b[,bpm]     시험 소리 2마디(8박). bpm을 주면 그 템포로, 없으면 지금 케이던스(모르면 기본값)
 //   z[,bpm]     시험 진동 2마디(8박). 템포는 b와 같다
 //   y           진동 2초 계속 — 배선 확인용. 판정 상태와 상관없이 바로 낸다
-//   m,<0|1|2>   자극 방식 — 0 소리 · 1 진동 · 2 둘 다 (다시 켜면 기본값으로 돌아온다)
+//   m,<0|1|2>   자극 방식 — 0 소리 · 1 진동 · 2 둘 다 (플래시에 남는다)
 //   a,<0|1>     자극 켜기·끄기. 0이면 판정·버튼은 알리기만 한다 (다시 켜면 1로 돌아온다)
 //   s           지금 나는 소리를 끈다 (판정·버튼·시험 소리 모두)
+// 설정 저장 (ESP32 플래시 NVS). 값이 바뀔 때만 쓴다 — 웹이 연결할 때마다 같은 값을 다시 보내도 플래시를 닳게 하지 않게
+Preferences prefs;
+void saveSetting(const char* key, int v) {
+  if (prefs.getInt(key, -1) != v) prefs.putInt(key, v);
+}
+
 const char* modeName(int m) { return m == CUE_SOUND ? "소리" : m == CUE_VIBE ? "진동" : "둘 다"; }
 
 void handleCommand(const char* s, uint32_t now) {
   if (s[0] == 'v' && s[1] == ',') {
     cue.setVolume(atoi(s + 2));
-    Serial.printf("[VOL ] %d%%\n", cue.volume());
+    saveSetting("vol", cue.volume());
+    out.printf("[VOL ] %d%%\n", cue.volume());
   } else if ((s[0] == 'b' || s[0] == 'z') && (s[1] == '\0' || s[1] == ',')) {
     // b = 시험 소리, z = 시험 진동. 설정된 방식과 상관없이 그것만 낸다
-    if (state == FROZEN) { Serial.println("[TEST] 동결 판정 중이라 시험을 건너뛴다"); return; }
+    if (state == FROZEN) { out.println("[TEST] 동결 판정 중이라 시험을 건너뛴다"); return; }
     int  bpm  = s[1] == ',' ? atoi(s + 2) : gait.cadence();   // 범위 밖이면 cue.start가 기본값으로 바꾼다
     bool vibe = s[0] == 'z';
     cue.stop();
     cue.start(bpm, now, vibe ? CUE_VIBE : CUE_SOUND);
     test_until_ms = now + 7 * (60000UL / cue.tempo()) + VIBE_DOWNBEAT_MS + 20;
     if (test_until_ms == 0) test_until_ms = 1;
-    Serial.printf("[TEST] 시험 %s tempo=%d vol=%d%%\n", vibe ? "진동" : "소리", cue.tempo(), cue.volume());
+    out.printf("[TEST] 시험 %s tempo=%d vol=%d%%\n", vibe ? "진동" : "소리", cue.tempo(), cue.volume());
   } else if (s[0] == 'y' && s[1] == '\0') {
     cue.vibrateFor(now, 2000);
-    Serial.println("[TEST] 진동 2초");
+    out.println("[TEST] 진동 2초");
   } else if (s[0] == 'm' && s[1] == ',') {
     cue.setMode(atoi(s + 2));
-    Serial.printf("[MODE] %s\n", modeName(cue.mode()));
+    saveSetting("mode", cue.mode());
+    out.printf("[MODE] %s\n", modeName(cue.mode()));
   } else if (s[0] == 's' && s[1] == '\0') {
     test_until_ms = 0;
-    leaveCue(now);          // 동결 판정 중이면 상태는 남는다 — 판정이 풀리기 전에는 다시 켜지 않는다
+    leaveCue(now, STOP_WEB); // 동결 판정 중이면 상태는 남는다 — 판정이 풀리기 전에는 다시 켜지 않는다
   } else if (s[0] == 'a' && s[1] == ',') {
     cue_enabled = s[2] != '0';
-    if (!cue_enabled) { test_until_ms = 0; leaveCue(now); }
-    Serial.printf("[ARM ] 자극 %s\n", cue_enabled ? "켬" : "끔");
+    if (!cue_enabled) { test_until_ms = 0; leaveCue(now, STOP_WEB); }
+    out.printf("[ARM ] 자극 %s\n", cue_enabled ? "켬" : "끔");
   }
 }
 
@@ -173,10 +202,13 @@ void pollCommands(uint32_t now) {
       line[n++] = c;
     }
   }
+  // Wi-Fi로 온 명령도 같은 길로
+  char wl[24];
+  while (wlink::readCommand(wl, sizeof(wl))) handleCommand(wl, now);
   if (test_until_ms && (int32_t)(now - test_until_ms) >= 0) {
     cue.stop();
     test_until_ms = 0;
-    Serial.println("[TEST] 끝");
+    out.println("[TEST] 끝");
   }
 }
 
@@ -190,11 +222,17 @@ void setup() {
   mpuBegin();
   gait.begin();
   freeze.begin();
+  turn.begin();
   cue.begin();
+  // 소리 크기 · 박자 방식은 플래시에 남는다 — 외출 전에 '진동'으로 바꿔 두면 껐다 켜도 그대로다
+  prefs.begin("fogcue", false);
+  cue.setVolume(prefs.getInt("vol", CUE_VOLUME_DEFAULT));
+  cue.setMode(prefs.getInt("mode", CUE_MODE_DEFAULT));
+  wlink::begin();
 
-  Serial.printf("보행동결 자극 시스템 · STAGE %d · %.1f Hz\n", STAGE, SAMPLE_HZ);
-  Serial.printf("[VOL ] %d%%\n", cue.volume());
-  Serial.printf("[MODE] %s\n", modeName(cue.mode()));
+  out.printf("보행동결 자극 시스템 · STAGE %d · %.1f Hz\n", STAGE, SAMPLE_HZ);
+  out.printf("[VOL ] %d%%\n", cue.volume());
+  out.printf("[MODE] %s\n", modeName(cue.mode()));
   // W2에서 이 값을 실측으로 확인할 것 — 1분간 샘플 수 ÷ 60 이 62.5 ± 1% 여야 한다.
 }
 
@@ -222,25 +260,28 @@ void loop() {
   if (!mpuReady()) return;
   uint32_t now = millis();
 
-  float ax, ay, az;
+  float a[3], g[3];
   // 읽기에 실패한 샘플은 버린다. 0을 넣으면 1 g짜리 가짜 충격이 걸음·동결 판정에 들어간다
-  if (!readAccel(ax, ay, az)) return;
+  if (!readImu(a, g)) return;
+  const float ax = a[0], ay = a[1], az = a[2];
   float mag  = sqrtf(ax * ax + ay * ay + az * az);
   bool  step = gait.update(mag, now);
+  turn.update(ax, ay, az, g[0], g[1], g[2], now);
 
+  // 마지막 열 = 세로축 회전 빠르기 °/s
   if (LOG_RAW)
-    Serial.printf("r,%lu,%.4f,%.4f,%.4f,%d,%d\n",
-                  (unsigned long)now, ax, ay, az, step ? 1 : 0, gait.cadence());
+    out.printf("r,%lu,%.4f,%.4f,%.4f,%d,%d,%.1f\n",
+                  (unsigned long)now, ax, ay, az, step ? 1 : 0, gait.cadence(), turn.yawRate());
 
 #if STAGE >= 3
-  bool judged = freeze.push(mag);
+  bool judged = freeze.push(mag, turn.holdOff(now));
   rememberCadence(now);
 #endif
 
 #if STAGE == 1
   // ── 1단계: 걸음만 센다 ──
   static uint32_t count = 0;
-  if (step) Serial.printf("step %lu  cadence=%d\n", ++count, gait.cadence());
+  if (step) out.printf("step %lu  cadence=%d\n", ++count, gait.cadence());
 
 #elif STAGE == 2
   // ── 2단계: 멈추면 울린다. 동결인지 아닌지는 아직 안 가린다 ──
@@ -248,7 +289,7 @@ void loop() {
     state = STOPPED;
     enterCue(now, false, gait.cadence());
   }
-  if (state != WALKING && step) { leaveCue(now); state = WALKING; }
+  if (state != WALKING && step) { leaveCue(now, STOP_RELEASED); state = WALKING; }
 
 #else
   // ── 3단계 이상: 판정기만 본다 ──
@@ -263,13 +304,15 @@ void loop() {
       state = FROZEN;                  // 자극이 꺼져 있어도 상태는 바뀐다 — 판정 줄로 웹이 본다
       if (cue_enabled) enterCue(now, false, cadenceBeforeFreeze());
     } else if (state == FROZEN && !freeze.isFrozen()) {
-      leaveCue(now);
+      leaveCue(now, STOP_RELEASED);
       state = WALKING;
     }
     if (LOG_RAW)
-      Serial.printf("f,%lu,%.3f,%.3f,%.5f,%d,%d,%d\n", (unsigned long)now,
+      // 마지막 열 = 도는 중이라 판정을 미루고 있는가
+      out.printf("f,%lu,%.3f,%.3f,%.5f,%d,%d,%d,%d\n", (unsigned long)now,
                     freeze.freezeIndex(), freeze.regularity(), freeze.lastPower(),
-                    freeze.candidate() ? 1 : 0, freeze.isFrozen() ? 1 : 0, cue.active() ? 1 : 0);
+                    freeze.candidate() ? 1 : 0, freeze.isFrozen() ? 1 : 0, cue.active() ? 1 : 0,
+                    turn.holdOff(now) ? 1 : 0);
   }
 #endif
 
@@ -286,12 +329,17 @@ void loop() {
   raw_prev = raw;
   if (same >= 2 && raw != stable) {
     stable = raw;
-    Serial.println(stable == LOW ? "[BTN ] 누름" : "[BTN ] 뗌");
+    out.println(stable == LOW ? "[BTN ] 누름" : "[BTN ] 뗌");
     if (stable == LOW && cue_enabled) {
-      if (cue.active()) leaveCue(now); else enterCue(now, true, cadenceBeforeFreeze());
+      if (cue.active()) leaveCue(now, STOP_BUTTON); else enterCue(now, true, cadenceBeforeFreeze());
     }
   }
 #endif
 
   cue.update(now);
+  // 안전장치(CUE_MAX_MS)는 cue 안에서 조용히 멈춘다. 앱 화면에는 30초 자동 정지로 알린다
+  if (real_cue && !cue.active()) {
+    real_cue = false;
+    out.printf("e,%lu,0,%d\n", (unsigned long)now, (int)STOP_TIMEOUT);
+  }
 }
