@@ -1,0 +1,8 @@
+{
+  "name": "fogcue-final-deck",
+  "private": true,
+  "dependencies": {
+    "jszip": "^3.10.2",
+    "pptxgenjs": "^3.12.0"
+  }
+}

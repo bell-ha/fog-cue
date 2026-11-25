@@ -3,6 +3,24 @@
 static constexpr int LEDC_CH  = 0;
 static constexpr int LEDC_RES = 10;          // 10비트. duty 0~1023
 
+// 음악 박자 — 한 박에 한 음 (Hz). 긴 음은 박마다 다시 친다
+enum { N_C = 1047, N_D = 1175, N_E = 1319, N_F = 1397, N_G = 1568, N_A = 1760 };   // 6옥타브 도~라
+static const uint16_t SONG_STAR[] = {        // 작은 별
+  N_C, N_C, N_G, N_G, N_A, N_A, N_G, N_G,  N_F, N_F, N_E, N_E, N_D, N_D, N_C, N_C,
+  N_G, N_G, N_F, N_F, N_E, N_E, N_D, N_D,  N_G, N_G, N_F, N_F, N_E, N_E, N_D, N_D,
+  N_C, N_C, N_G, N_G, N_A, N_A, N_G, N_G,  N_F, N_F, N_E, N_E, N_D, N_D, N_C, N_C };
+static const uint16_t SONG_JOY[] = {         // 환희의 송가
+  N_E, N_E, N_F, N_G, N_G, N_F, N_E, N_D,  N_C, N_C, N_D, N_E, N_E, N_D, N_D, N_D,
+  N_E, N_E, N_F, N_G, N_G, N_F, N_E, N_D,  N_C, N_C, N_D, N_E, N_D, N_C, N_C, N_C };
+
+// 성자의 행진 (When the Saints Go Marching In) — 행진곡이라 걸음 박자가 또렷하다
+static const uint16_t SONG_SAINTS[] = {
+  N_C, N_E, N_F, N_G, N_G, N_G,
+  N_C, N_E, N_F, N_G, N_G, N_G,
+  N_C, N_E, N_F, N_G, N_G, N_E, N_E, N_C, N_C, N_E, N_E, N_D, N_D, N_D,
+  N_E, N_E, N_D, N_D, N_C, N_C, N_C, N_E, N_E, N_G, N_G, N_F, N_F, N_F,
+  N_E, N_F, N_G, N_G, N_E, N_E, N_C, N_C, N_D, N_D, N_C, N_C, N_C };
+
 void CuePlayer::begin() {
   ledcSetup(LEDC_CH, 2000, LEDC_RES);
   ledcAttachPin(PIN_BUZZER, LEDC_CH);
@@ -40,6 +58,17 @@ void CuePlayer::setMode(int mode) {
   mode_ = (mode == CUE_SOUND || mode == CUE_VIBE) ? mode : CUE_BOTH;
 }
 
+void CuePlayer::setSong(int song) {
+  song_ = (song >= 1 && song <= 3) ? song : 0;
+}
+
+void CuePlayer::chirp(uint32_t now_ms, int hz, uint32_t ms) {
+  ledcWriteTone(LEDC_CH, hz);
+  ledcWrite(LEDC_CH, 512 * volume_ / 100);
+  sounding_    = true;
+  tone_off_ms_ = now_ms + ms;
+}
+
 void CuePlayer::stop() {
   beatOff();
   vibOff();
@@ -50,7 +79,18 @@ void CuePlayer::stop() {
 void CuePlayer::beatOn(uint32_t now_ms) {
   bool downbeat = (beat_ % BEATS_PER_BAR) == 0;
   if (run_mode_ != CUE_VIBE) {
-    ledcWriteTone(LEDC_CH, downbeat ? TONE_DOWNBEAT_HZ : TONE_BEAT_HZ);
+    int hz = downbeat ? TONE_DOWNBEAT_HZ : TONE_BEAT_HZ;
+    uint32_t len = TONE_LEN_MS;
+    if (song_) {
+      const uint16_t* notes = song_ == 1 ? SONG_STAR : song_ == 2 ? SONG_JOY : SONG_SAINTS;
+      int n = song_ == 1 ? sizeof(SONG_STAR) / sizeof(SONG_STAR[0])
+            : song_ == 2 ? sizeof(SONG_JOY) / sizeof(SONG_JOY[0])
+            : sizeof(SONG_SAINTS) / sizeof(SONG_SAINTS[0]);
+      hz  = notes[beat_ % n];
+      len = MUSIC_TONE_MS;
+      if (len > interval_ms_ * 7 / 10) len = interval_ms_ * 7 / 10;
+    }
+    ledcWriteTone(LEDC_CH, hz);
     // 소리 크기는 duty로 정한다. 512(50%)가 가장 크다
     int full = 512 * volume_ / 100;
     // 첫 박 직후 FADEIN_MS 동안은 duty를 올려 가며 작게 낸다
@@ -60,7 +100,7 @@ void CuePlayer::beatOn(uint32_t now_ms) {
     if (duty > full) duty = full;
     ledcWrite(LEDC_CH, duty);
     sounding_    = true;
-    tone_off_ms_ = now_ms + TONE_LEN_MS;
+    tone_off_ms_ = now_ms + len;
   }
   if (run_mode_ != CUE_SOUND) vibOn(now_ms, downbeat ? VIBE_DOWNBEAT_MS : VIBE_BEAT_MS);
 }

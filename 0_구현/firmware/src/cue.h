@@ -38,6 +38,13 @@ public:
   void setMode(int mode);
   int  mode() const { return mode_; }
 
+  // 음악 박자 — 0 삑 소리 · 1 작은 별 · 2 환희의 송가 · 3 성자의 행진 (config.h)
+  void setSong(int song);
+  int  song() const { return song_; }
+
+  // 박자와 상관없이 소리 한 번 — 넘어짐 경고용
+  void chirp(uint32_t now_ms, int hz, uint32_t ms);
+
 private:
   bool     active_ = false;
   int      tempo_bpm_ = 0;
@@ -53,6 +60,7 @@ private:
   int      volume_ = CUE_VOLUME_DEFAULT;
   int      mode_ = CUE_MODE_DEFAULT;
   int      run_mode_ = CUE_MODE_DEFAULT;   // 이번 자극에 쓰는 방식
+  int      song_ = 0;
 
   void beatOn(uint32_t now_ms);
   void beatOff();

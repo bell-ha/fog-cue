@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <defs><clipPath id="c"><circle cx="200" cy="200" r="200"/></clipPath></defs>
+  <g clip-path="url(#c)">
+    <rect width="400" height="400" fill="#E8EEF6"/>
+    <!-- 뒷머리 (어깨 길이) -->
+    <path d="M118 170 C 112 96, 160 70, 202 70 C 246 70, 292 98, 284 172 C 282 220, 296 262, 300 300 L 100 300 C 106 262, 120 220, 118 170 Z" fill="#3A2A23"/>
+    <!-- 몸 · 재킷 -->
+    <path d="M58 400 C 68 318, 130 286, 200 286 C 270 286, 332 318, 342 400 Z" fill="#33445F"/>
+    <path d="M170 288 L200 352 L230 288 Z" fill="#FFFFFF"/>
+    <path d="M170 288 L186 330 L160 318 Z M230 288 L214 330 L240 318 Z" fill="#2A384F"/>
+    <!-- 목 -->
+    <path d="M178 238 L178 292 Q200 304 222 292 L222 238 Z" fill="#EBC09E"/>
+    <!-- 얼굴 -->
+    <ellipse cx="200" cy="176" rx="66" ry="80" fill="#F6D2B3"/>
+    <!-- 앞머리 (옆으로 넘김) -->
+    <path d="M134 168 C 130 112, 166 88, 206 88 C 246 88, 272 114, 268 168 C 258 140, 240 122, 214 116 C 196 132, 166 146, 134 168 Z" fill="#3A2A23"/>
+    <path d="M134 168 C 128 200, 130 236, 140 262 L 128 262 C 116 228, 118 196, 134 168 Z" fill="#3A2A23"/>
+    <path d="M268 168 C 274 200, 272 236, 262 262 L 274 262 C 286 228, 284 196, 268 168 Z" fill="#3A2A23"/>
+    <!-- 눈썹 -->
+    <path d="M160 156 Q174 149 188 154" stroke="#4A3830" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M212 154 Q226 149 240 156" stroke="#4A3830" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <!-- 눈 -->
+    <ellipse cx="174" cy="176" rx="6" ry="7" fill="#2E2A27"/><ellipse cx="226" cy="176" rx="6" ry="7" fill="#2E2A27"/>
+    <path d="M164 170 Q174 165 184 170 M216 170 Q226 165 236 170" stroke="#2E2A27" stroke-width="2.5" fill="none"/>
+    <!-- 볼 -->
+    <ellipse cx="158" cy="206" rx="13" ry="7" fill="#F2A99A" fill-opacity="0.55"/><ellipse cx="242" cy="206" rx="13" ry="7" fill="#F2A99A" fill-opacity="0.55"/>
+    <!-- 코 · 입 -->
+    <path d="M200 186 Q195 204 200 207 Q204 208 207 206" stroke="#DDAA86" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M182 224 Q200 236 218 224" stroke="#B85C55" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <!-- 귀걸이 -->
+    <circle cx="136" cy="214" r="4" fill="#E8C766"/><circle cx="264" cy="214" r="4" fill="#E8C766"/>
+  </g>
+</svg>

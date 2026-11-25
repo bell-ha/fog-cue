@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <defs><clipPath id="c"><circle cx="200" cy="200" r="200"/></clipPath></defs>
+  <g clip-path="url(#c)">
+    <rect width="400" height="400" fill="#E3F4EA"/>
+    <!-- 몸 · 카디건 -->
+    <path d="M60 400 C 70 315, 130 282, 200 282 C 270 282, 330 315, 340 400 Z" fill="#5E6E64"/>
+    <path d="M168 284 L200 340 L232 284 Z" fill="#F4F1EA"/>
+    <path d="M200 340 L200 400" stroke="#4C5A51" stroke-width="4"/>
+    <circle cx="200" cy="362" r="5" fill="#3E4A43"/><circle cx="200" cy="388" r="5" fill="#3E4A43"/>
+    <!-- 목 -->
+    <path d="M176 236 L176 288 Q200 300 224 288 L224 236 Z" fill="#E9BB95"/>
+    <!-- 귀 -->
+    <ellipse cx="129" cy="182" rx="14" ry="20" fill="#EFC29C"/><ellipse cx="271" cy="182" rx="14" ry="20" fill="#EFC29C"/>
+    <!-- 얼굴 -->
+    <ellipse cx="200" cy="176" rx="70" ry="84" fill="#F3CBA6"/>
+    <!-- 머리 (희끗, 이마가 넓다) -->
+    <path d="M131 176 C 124 120, 150 88, 200 86 C 250 88, 276 120, 269 176 C 266 150, 258 134, 246 126 C 232 116, 214 112, 200 112 C 186 112, 168 116, 154 126 C 142 134, 134 150, 131 176 Z" fill="#D4D6D8"/>
+    <path d="M131 176 C 130 160, 133 146, 140 136 L146 170 Z" fill="#C3C6C9"/>
+    <path d="M269 176 C 270 160, 267 146, 260 136 L254 170 Z" fill="#C3C6C9"/>
+    <!-- 눈썹 -->
+    <path d="M156 150 Q172 142 188 149" stroke="#A9ADB1" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path d="M212 149 Q228 142 244 150" stroke="#A9ADB1" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <!-- 안경 -->
+    <rect x="150" y="160" width="44" height="32" rx="10" fill="#FFFFFF" fill-opacity="0.25" stroke="#3A3F44" stroke-width="4"/>
+    <rect x="206" y="160" width="44" height="32" rx="10" fill="#FFFFFF" fill-opacity="0.25" stroke="#3A3F44" stroke-width="4"/>
+    <path d="M194 172 Q200 167 206 172" stroke="#3A3F44" stroke-width="4" fill="none"/>
+    <path d="M150 170 L136 166" stroke="#3A3F44" stroke-width="4"/><path d="M250 170 L264 166" stroke="#3A3F44" stroke-width="4"/>
+    <!-- 눈 -->
+    <circle cx="172" cy="177" r="5" fill="#2E2A27"/><circle cx="228" cy="177" r="5" fill="#2E2A27"/>
+    <!-- 눈가 주름 -->
+    <path d="M140 186 l-6 3 M141 192 l-6 1" stroke="#D9A982" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M260 186 l6 3 M259 192 l6 1" stroke="#D9A982" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- 코 · 입 -->
+    <path d="M200 186 Q193 210 200 214 Q205 215 208 212" stroke="#D9A982" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <path d="M178 230 Q200 242 222 230" stroke="#9C5B45" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M166 222 Q170 230 176 232 M234 222 Q230 230 224 232" stroke="#D9A982" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>

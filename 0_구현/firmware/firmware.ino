@@ -15,6 +15,7 @@
 //   STAGE 3  동결만 골라낸다 (걸음 규칙성 + Freeze Index) · 택트스위치로 직접 켜고 끄기
 //            몸이 도는 동안은 판정을 미룬다 (자이로, src/turn.h)
 //   STAGE 4  부가 기능
+//   음악 박자 · 넘어짐 알림은 단계와 상관없이 웹에서 켜고 끈다 (config.h)
 //   Wi-Fi는 단계와 상관없이 firmware/wifi_secret.h가 있으면 켜진다 (src/link.h)
 #define STAGE 3
 
@@ -116,9 +117,32 @@ uint32_t test_until_ms = 0;
 bool     cue_enabled = true;
 // 시연 모드 (config.h) — 자동 판정을 쉬고, 버튼으로 굳음 · 풀림을 낸다
 bool     demo_mode = false;
+// 시연 모드에서 버튼이 보여 주는 것 — false 발 굳음 · true 넘어짐
+bool     demo_fall = false;
 
 // 걷던 빠르기 — 5초 전 값을 쓰고, 모르면 지금 값
 int demoTempo() { int c = cadenceBeforeFreeze(); return c ? c : gait.cadence(); }
+
+// ─── 넘어짐 알림 (config.h) ──────────────────────────
+// 앱 화면용 줄:  x,<t_ms>,<단계>[,<취소 기다리는 초>]
+//   1 누운 채로 있다 · 버튼을 기다린다   0 버튼으로 취소 (또는 기능을 껐다)
+//   2 보호자에게 알렸다                  3 다시 일어섰다
+enum FallState { FALL_NONE, FALL_LYING, FALL_WARN, FALL_SENT, FALL_CANCELLED };
+bool      fall_on = false;
+FallState fall = FALL_NONE;
+bool      fall_by_btn = false;   // 시연 모드에서 버튼으로 낸 넘어짐 — 자세를 보지 않고 버튼으로만 끝난다
+void endFall(uint32_t now);
+uint32_t  fall_ms = 0, fall_beep_ms = 0;
+float     grav[3] = {0, 0, 1};   // 0.5초쯤으로 거른 중력 방향
+float     tilt_deg = 0;
+
+void fallLine(uint32_t now, int phase) {
+  out.printf("x,%lu,%d\n", (unsigned long)now, phase);
+  static const char* name[] = { "괜찮다고 누름", "-", "넘어짐 · 보호자에게 알림", "일어섬" };
+  out.printf("[FALL] %s (기울기 %.0f도)\n", name[phase], tilt_deg);
+}
+
+const char* demoName() { return !demo_mode ? "끔" : demo_fall ? "켬 · 버튼 = 넘어짐" : "켬 · 버튼 = 발 굳음"; }
 
 // ─── 상태 전환 ───────────────────────────────────────
 // 앱 화면용 줄 — 박자가 켜지고 꺼질 때 한 줄씩. 시험 소리·진동은 내지 않는다
@@ -156,7 +180,9 @@ void leaveCue(uint32_t now, StopReason why) {
 //   m,<0|1|2>   자극 방식 — 0 소리 · 1 진동 · 2 둘 다 (플래시에 남는다)
 //   a,<0|1>     자극 켜기·끄기. 0이면 판정·버튼은 알리기만 한다 (다시 켜면 1로 돌아온다)
 //   s           지금 나는 소리를 끈다 (판정·버튼·시험 소리 모두)
-//   d,<0|1>     시연 모드 — 버튼이 판정 대신 (config.h, 플래시에 남는다)
+//   d,<0|1|2>   시연 모드 — 0 끔 · 1 버튼 = 발 굳음 · 2 버튼 = 넘어짐 (config.h, 플래시에 남는다)
+//   u,<0~3>     음악 박자 — 0 삑 소리 · 1 작은 별 · 2 환희의 송가 · 3 성자의 행진 (플래시에 남는다)
+//   n,<0|1>     넘어짐 알림 켜기 · 끄기 (플래시에 남는다)
 // 설정 저장 (ESP32 플래시 NVS). 값이 바뀔 때만 쓴다 — 웹이 연결할 때마다 같은 값을 다시 보내도 플래시를 닳게 하지 않게
 Preferences prefs;
 void saveSetting(const char* key, int v) {
@@ -164,6 +190,7 @@ void saveSetting(const char* key, int v) {
 }
 
 const char* modeName(int m) { return m == CUE_SOUND ? "소리" : m == CUE_VIBE ? "진동" : "둘 다"; }
+const char* songName(int g) { return g == 1 ? "작은 별" : g == 2 ? "환희의 송가" : g == 3 ? "성자의 행진" : "삑 소리"; }
 
 void handleCommand(const char* s, uint32_t now) {
   if (s[0] == 'v' && s[1] == ',') {
@@ -192,12 +219,25 @@ void handleCommand(const char* s, uint32_t now) {
     leaveCue(now, STOP_WEB); // 동결 판정 중이면 상태는 남는다 — 판정이 풀리기 전에는 다시 켜지 않는다
     if (demo_mode) state = WALKING;   // 시연 모드는 버튼이 판정이라, 끄면 풀린 것으로 본다
   } else if (s[0] == 'd' && s[1] == ',') {
-    bool on = s[2] != '0';
-    if (on != demo_mode && state == FROZEN) { leaveCue(now, STOP_RELEASED); state = WALKING; }
+    int  v  = atoi(s + 2);
+    bool on = v != 0;
+    if (state == FROZEN && (on != demo_mode || (v == 2) != demo_fall)) { leaveCue(now, STOP_RELEASED); state = WALKING; }
     if (on != demo_mode) freeze.reset();   // 판정을 처음부터 — 쉬는 동안 쌓인 값으로 바로 울리지 않게
+    if (fall_by_btn && (v != 2)) endFall(now);   // 버튼으로 낸 넘어짐은 바꾸면 접는다
     demo_mode = on;
-    saveSetting("demo", demo_mode ? 1 : 0);
-    out.printf("[DEMO] 시연 모드 %s\n", demo_mode ? "켬" : "끔");
+    demo_fall = v == 2;
+    saveSetting("demo", demo_mode ? (demo_fall ? 2 : 1) : 0);
+    out.printf("[DEMO] 시연 모드 %s\n", demoName());
+  } else if (s[0] == 'u' && s[1] == ',') {
+    cue.setSong(atoi(s + 2));
+    saveSetting("song", cue.song());
+    out.printf("[SONG] %s\n", songName(cue.song()));
+  } else if (s[0] == 'n' && s[1] == ',') {
+    bool on = s[2] != '0';
+    if (!on && !fall_by_btn) endFall(now);
+    fall_on = on;
+    saveSetting("fall", fall_on ? 1 : 0);
+    out.printf("[FALL] 넘어짐 알림 %s\n", fall_on ? "켬" : "끔");
   } else if (s[0] == 'a' && s[1] == ',') {
     cue_enabled = s[2] != '0';
     if (!cue_enabled) { test_until_ms = 0; leaveCue(now, STOP_WEB); }
@@ -226,6 +266,70 @@ void pollCommands(uint32_t now) {
   }
 }
 
+// 넘어짐 경고를 시작한다 — 누운 채 오래 있거나, 시연 모드에서 버튼을 눌렀을 때
+void startFall(uint32_t now, bool by_btn) {
+  // 박자는 끈다 — 누운 사람에게 걷는 박자는 필요 없다
+  test_until_ms = 0;
+  leaveCue(now, STOP_RELEASED);
+  if (state == FROZEN) state = WALKING;
+  fall = FALL_WARN; fall_ms = now; fall_beep_ms = 0; fall_by_btn = by_btn;
+  fallLine(now, 2);                  // 보호자에게 바로 알린다
+}
+
+// 넘어짐을 어느 단계에서든 접는다
+void endFall(uint32_t now) {
+  if (fall == FALL_WARN || fall == FALL_SENT) { cue.stop(); fallLine(now, 3); }
+  fall = FALL_NONE; fall_by_btn = false;
+}
+
+// 샘플마다. 기울기를 갱신하고 넘어짐 단계를 넘긴다
+uint32_t impact_ms = 0;   // 크게 내려앉은 시각. 0이면 없음
+
+void updateFall(const float* a, float mag, bool step, uint32_t now) {
+  const float k = 0.03f;                 // 62.5 Hz에서 약 0.5초
+  for (int i = 0; i < 3; i++) grav[i] += k * (a[i] - grav[i]);
+  float n = sqrtf(grav[0] * grav[0] + grav[1] * grav[1] + grav[2] * grav[2]);
+  if (n < 0.3f) return;                  // 떨어지는 중이거나 값이 이상하다
+  float c = fabsf(grav[2]) / n;
+  tilt_deg = acosf(c > 1 ? 1 : c) * 57.2958f;
+  bool lying = FALL_USE_TILT && tilt_deg > FALL_TILT_DEG, upright = tilt_deg < FALL_UP_DEG;
+  bool     watch = fall_on && !demo_mode;   // 시연 모드에서는 버튼만 본다
+
+  // 가. 주저앉음 — 충격 뒤 1초는 흔들림이 가라앉기를 기다리고, 그다음 FALL_STILL_MS 동안 가만히 있는지 본다
+  if (!watch || fall >= FALL_WARN) impact_ms = 0;
+  else {
+    if (mag > FALL_IMPACT_G) { impact_ms = now ? now : 1; out.printf("[FALL] 충격 %.2f g\n", mag); }
+    else if (impact_ms && now - impact_ms > (uint32_t)FALL_SETTLE_MS) {
+      if (step || fabsf(mag - n) > FALL_STILL_G) impact_ms = 0;          // 움직인다 — 일어났거나 넘어진 게 아니다
+      else if (now - impact_ms >= (uint32_t)(FALL_SETTLE_MS + FALL_STILL_MS)) { impact_ms = 0; startFall(now, false); return; }
+    }
+  }
+
+  switch (fall) {
+  case FALL_NONE:
+    if (watch && lying) { fall = FALL_LYING; fall_ms = now; }
+    break;
+  case FALL_LYING:
+    if (!lying || !watch) fall = FALL_NONE;
+    else if (now - fall_ms >= FALL_LIE_MS) startFall(now, false);
+    break;
+  case FALL_WARN:
+    // 1초마다 길게 떨고 낮게 한 번 운다. 소리 크기는 박자와 같다
+    if (!fall_beep_ms || now - fall_beep_ms >= 1000) {
+      fall_beep_ms = now;
+      cue.vibrateFor(now, 600);
+      cue.chirp(now, 600, 300);
+    }
+    if (upright && !fall_by_btn) { cue.stop(); fall = FALL_NONE; fallLine(now, 3); }   // 스스로 일어섰다
+    else if (now - fall_ms >= (uint32_t)FALL_ALARM_MS) fall = FALL_SENT;               // 떨고 우는 것만 멈춘다
+    break;
+  case FALL_SENT:
+  case FALL_CANCELLED:
+    if (upright && !fall_by_btn) { if (fall == FALL_SENT) fallLine(now, 3); fall = FALL_NONE; }
+    break;
+  }
+}
+
 // ─── setup / loop ────────────────────────────────────
 void setup() {
   Serial.begin(115200);
@@ -242,13 +346,17 @@ void setup() {
   prefs.begin("fogcue", false);
   cue.setVolume(prefs.getInt("vol", CUE_VOLUME_DEFAULT));
   cue.setMode(prefs.getInt("mode", CUE_MODE_DEFAULT));
-  demo_mode = prefs.getInt("demo", 0) == 1;
+  { int v = prefs.getInt("demo", 0); demo_mode = v != 0; demo_fall = v == 2; }
+  cue.setSong(prefs.getInt("song", 0));
+  fall_on = prefs.getInt("fall", 0) == 1;
   wlink::begin();
 
   out.printf("보행동결 자극 시스템 · STAGE %d · %.1f Hz\n", STAGE, SAMPLE_HZ);
   out.printf("[VOL ] %d%%\n", cue.volume());
   out.printf("[MODE] %s\n", modeName(cue.mode()));
-  out.printf("[DEMO] 시연 모드 %s\n", demo_mode ? "켬" : "끔");
+  out.printf("[DEMO] 시연 모드 %s\n", demoName());
+  out.printf("[SONG] %s\n", songName(cue.song()));
+  out.printf("[FALL] 넘어짐 알림 %s\n", fall_on ? "켬" : "끔");
   // W2에서 이 값을 실측으로 확인할 것 — 1분간 샘플 수 ÷ 60 이 62.5 ± 1% 여야 한다.
 }
 
@@ -283,6 +391,7 @@ void loop() {
   float mag  = sqrtf(ax * ax + ay * ay + az * az);
   bool  step = gait.update(mag, now);
   turn.update(ax, ay, az, g[0], g[1], g[2], now);
+  updateFall(a, mag, step, now);
 
   // 마지막 열 = 세로축 회전 빠르기 °/s
   if (LOG_RAW)
@@ -316,8 +425,9 @@ void loop() {
   // 소리가 안전장치(CUE_MAX_MS)로 멈춰도 상태는 FROZEN에 남는다.
   // 판정이 풀리기 전에는 다시 켜지 않는다 — 계속 울리는 기기가 되지 않게.
   if (judged) {
-    if (demo_mode) {
+    if (demo_mode || fall >= FALL_WARN) {
       // 시연 모드: 자동 판정은 쉰다. 상태는 버튼이 바꾼다 (아래)
+      // 넘어짐 경고 · 알림 뒤에는 박자를 켜지 않는다
     } else if (state != FROZEN && freeze.isFrozen()) {
       state = FROZEN;                  // 자극이 꺼져 있어도 상태는 바뀐다 — 판정 줄로 웹이 본다
       if (cue_enabled) enterCue(now, false, cadenceBeforeFreeze());
@@ -349,7 +459,17 @@ void loop() {
   if (same >= 2 && raw != stable) {
     stable = raw;
     out.println(stable == LOW ? "[BTN ] 누름" : "[BTN ] 뗌");
-    if (stable == LOW && cue_enabled) {
+    if (stable == LOW && (fall == FALL_WARN || fall == FALL_SENT)) {
+      // 넘어짐을 알린 뒤에는 버튼이 '괜찮다'는 뜻이다. 보호자에게 한 번 더 알린다. 박자는 켜지 않는다
+      cue.stop();
+      fall = fall_by_btn ? FALL_NONE : FALL_CANCELLED;   // 시연은 바로 처음으로
+      fall_by_btn = false;
+      fallLine(now, 0);
+    } else if (stable == LOW && demo_fall && cue_enabled) {
+      // 시연 모드 · 넘어짐: 누르면 넘어진 것으로 치고 경고 → 10초 뒤 보호자 알림.
+      // 알린 뒤에 다시 누르면 일어난 것으로 친다
+      if (fall < FALL_WARN) startFall(now, true);
+    } else if (stable == LOW && cue_enabled && fall < FALL_WARN) {
       if (demo_mode) {
         // 시연 모드: 버튼 = 판정. 누르면 굳음, 다시 누르면 풀림
         if (state == FROZEN) { leaveCue(now, STOP_RELEASED); state = WALKING; }
